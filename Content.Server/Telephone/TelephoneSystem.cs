@@ -26,6 +26,7 @@ using Content.Server._Starlight.Language;
 using Content.Shared.IdentityManagement;
 using Robust.Shared.Player;
 using Content.Server.Chat.Managers;
+using Content.Shared._RMC14.Chat;
 // Starlight End
 
 namespace Content.Server.Telephone;
@@ -377,8 +378,9 @@ public sealed partial class TelephoneSystem : SharedTelephoneSystem
             ChatChannel.Local,
             message,
             wrappedMessage,
-            NetEntity.Invalid,
-            null);
+            GetNetEntity(messageSource),
+            _chatManager.EnsurePlayer(CompOrNull<ActorComponent>(messageSource)?.PlayerSession.UserId)?.Key,
+            repeatCheckSender: !HasComp<ChatRepeatIgnoreSenderComponent>(source)));
 
         var chatMsg = new MsgChatMessage { Message = chat };
 

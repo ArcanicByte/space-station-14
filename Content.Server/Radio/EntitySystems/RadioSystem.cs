@@ -29,6 +29,10 @@ using Content.Shared._Starlight.Language.Components;
 using Content.Shared.Ghost;
 using Content.Server._Starlight.TextToSpeech;
 using Content.Shared._Starlight.Clothing;
+#region "Starlight"
+using Content.Shared._RMC14.Chat;
+using Content.Server.Chat.Managers;
+#endregion
 
 namespace Content.Server.Radio.EntitySystems;
 
@@ -47,6 +51,7 @@ public sealed partial class RadioSystem : EntitySystem
     [Dependency] private AccessReaderSystem _accessReader = default!;
     [Dependency] private RadioChimeSystem _chime = default!; //🌟Starlight🌟
     [Dependency] private LanguageSystem _language = default!; // Starlight
+    [Dependency] private IChatManager _chatManager = default!;
 
     // set used to prevent radio feedback loops.
     private readonly HashSet<string> _messages = new();
@@ -179,15 +184,23 @@ public sealed partial class RadioSystem : EntitySystem
 
         // most radios are relayed to chat, so lets parse the chat message beforehand
 
-        var msg = new ChatMessage(ChatChannel.Radio, content, wrappedMessage, NetEntity.Invalid, null); // Starlight
+        var msg = new ChatMessage(ChatChannel.Radio, content, wrappedMessage, NetEntity.Invalid, // Starlight
+            _chatManager.EnsurePlayer(CompOrNull<ActorComponent>(messageSource)?.PlayerSession.UserId)?.Key,
+            repeatCheckSender: !HasComp<ChatRepeatIgnoreSenderComponent>(radioSource)); 
 
         var obfuscated = _language.ObfuscateSpeech(content, language);
         var obfuscatedWrapped = WrapRadioMessage(messageSource, channel, selectedName, obfuscated, language, true, loudComp);
-        var notUdsMsg = new ChatMessage(ChatChannel.Radio, obfuscated, obfuscatedWrapped, NetEntity.Invalid, null) { Chime = chime, };
+        var notUdsMsg = new ChatMessage(ChatChannel.Radio, obfuscated, obfuscatedWrapped, NetEntity.Invalid,
+            _chatManager.EnsurePlayer(CompOrNull<ActorComponent>(messageSource)?.PlayerSession.UserId)?.Key,
+            repeatCheckSender: !HasComp<ChatRepeatIgnoreSenderComponent>(radioSource))
+        { Chime = chime, };
         var ev = new RadioReceiveEvent(messageSource, channel, msg, notUdsMsg, language, radioSource, []);
 
         var ghostwrappedMessage = WrapRadioMessage(messageSource, channel, name, content, language, false, loudComp);
-        var ghostmsg = new ChatMessage(ChatChannel.Radio, content, ghostwrappedMessage, NetEntity.Invalid, null);
+        var ghostmsg = new ChatMessage(ChatChannel.Radio, content, ghostwrappedMessage, NetEntity.Invalid,
+            _chatManager.EnsurePlayer(CompOrNull<ActorComponent>(messageSource)?.PlayerSession.UserId)?.Key,
+            repeatCheckSender: !HasComp<ChatRepeatIgnoreSenderComponent>(radioSource));
+
         var ghostev = new RadioReceiveEvent(messageSource, channel, ghostmsg, notUdsMsg, language, radioSource, []);
         // Starlight - End
 

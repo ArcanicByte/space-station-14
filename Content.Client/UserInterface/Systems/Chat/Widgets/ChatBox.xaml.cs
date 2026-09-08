@@ -12,6 +12,9 @@ using Robust.Shared.Input;
 using Robust.Shared.Player;
 using Robust.Shared.Utility;
 using static Robust.Client.UserInterface.Controls.LineEdit;
+#startregion "Starlight"
+using Content.Client._RMC14.Chat;
+#endregion
 
 namespace Content.Client.UserInterface.Systems.Chat.Widgets;
 
@@ -32,6 +35,7 @@ public partial class ChatBox : UIWidget
 
     public ChatSelectChannel SelectedChannel => ChatInput.ChannelSelector.SelectedChannel;
     public RichTextLabel SelectedLanguage => LanguageNotifier; // Starlight
+    public Queue<RepeatedMessage> RepeatQueue = new(); // Starlight
 
     public ChatBox()
     {
@@ -78,7 +82,7 @@ public partial class ChatBox : UIWidget
 
         var color = msg.MessageColorOverride ?? msg.Channel.TextColor();
 
-        AddLine(msg.WrappedMessage, color);
+        AddLine(msg.WrappedMessage, color, msg.SenderEntity, msg.Message, msg.Channel, msg.RepeatCheckSender);
     }
 
     private void OnHighlightsUpdated(string highlights)
@@ -147,12 +151,16 @@ public partial class ChatBox : UIWidget
         _controller.UpdateHighlights(highlighs);
     }
 
-    public void AddLine(string message, Color color)
+    public void AddLine(string message, Color color, NetEntity sender, string unwrapped, ChatChannel channel, bool repeatCheckSender) // Starlight
     {
         var formatted = new FormattedMessage(FormattedMessageDefaultCapacity);
         formatted.PushColor(color);
         formatted.AddMarkupPermissive(message);
         formatted.Pop();
+
+        if (_entManager.System<CMChatSystem>().TryRepetition(this, Contents, formatted, sender, unwrapped, channel, repeatCheckSender)) // Starlight
+            return;
+
         Contents.AddMessage(formatted, tagsAllowed: null);
     }
 
