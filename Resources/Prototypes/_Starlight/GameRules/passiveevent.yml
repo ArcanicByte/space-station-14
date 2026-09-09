@@ -189,3 +189,25 @@
         - vulpkanin
         - dog
         - puppy
+
+- type: entity
+  parent: BaseGameRule
+  id: Blizzard
+  components:
+    - type: StationEvent
+      weight: 2
+      startAnnouncement: station-event-blizzard-start-announcement
+      startAudio:
+        path: /Audio/Misc/notice1.ogg
+      endAnnouncement: station-event-blizzard-end-announcement
+      endAudio:
+        path: /Audio/Announcements/announce.ogg
+      duration: 120
+      maxDuration: 200
+      delay:  30
+      maps:
+        - StarlightNovoLobster
+    - type: BlizzardRule
+      lightBreakChancePerSecond: 0.0003
+      doorToggleChancePerSecond: 0.001
+
