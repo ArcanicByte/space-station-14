@@ -29,9 +29,6 @@ public sealed partial class BlizzardRule : StationEventSystem<BlizzardRuleCompon
 
     private float _effectTimer = 0;
 
-    public EntityUid _mapEntity;
-    public float _startingTemperature;
-
     public override void Initialize()
     {
         base.Initialize();
@@ -58,12 +55,10 @@ public sealed partial class BlizzardRule : StationEventSystem<BlizzardRuleCompon
 
         comp.Map = Transform(grid.Value).MapID;
 
-        _mapEntity = _map.GetMap(comp.Map);
+        comp.MapEntity = _map.GetMap(comp.Map);
 
-        if (!_atmosphere.TryGetMapTemperature(_mapEntity, out comp.OriginalTemperature))
+        if (!_atmosphere.TryGetMapTemperature(comp.MapEntity, out comp.OriginalTemperature))
             return;
-
-        _startingTemperature = comp.OriginalTemperature;
 
         for (var i = 1; i <= 6; i++)
         {
@@ -73,10 +68,9 @@ public sealed partial class BlizzardRule : StationEventSystem<BlizzardRuleCompon
             {
                 var progress = seconds / 30f;
 
-                var temperature = _startingTemperature +
-                                  (100f - _startingTemperature) * progress;
+                var temperature = comp.OriginalTemperature + (100f - comp.OriginalTemperature) * progress;
 
-                _atmosphere.SetMapTemperature(_mapEntity, temperature);
+                _atmosphere.SetMapTemperature(comp.MapEntity, temperature);
             });
         }
 
@@ -120,10 +114,9 @@ public sealed partial class BlizzardRule : StationEventSystem<BlizzardRuleCompon
             Timer.Spawn(seconds, () =>
             {
                 var progress = seconds / 30f;
-                var temperature = 100f +
-                                  (_startingTemperature - 100f) * progress;
+                var temperature = 100f + (comp.OriginalTemperature - 100f) * progress;
 
-                _atmosphere.SetMapTemperature(_mapEntity, temperature);
+                _atmosphere.SetMapTemperature(comp.MapEntity, temperature);
             });
         }
 
