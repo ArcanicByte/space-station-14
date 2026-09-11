@@ -63,13 +63,10 @@ public sealed partial class BlizzardRule : StationEventSystem<BlizzardRuleCompon
         for (var i = 1; i <= 6; i++)
         {
             var seconds = i * 5;
-
-            Timer.Spawn(seconds, () =>
+            Timer.Spawn(seconds * 1000, () =>
             {
                 var progress = seconds / 30f;
-
                 var temperature = comp.OriginalTemperature + (100f - comp.OriginalTemperature) * progress;
-
                 _atmosphere.SetMapTemperature(comp.MapEntity, temperature);
             });
         }
@@ -111,11 +108,10 @@ public sealed partial class BlizzardRule : StationEventSystem<BlizzardRuleCompon
         for (var i = 1; i <= 6; i++)
         {
             var seconds = i * 5;
-            Timer.Spawn(seconds, () =>
+            Timer.Spawn(seconds * 1000, () =>
             {
                 var progress = seconds / 30f;
                 var temperature = 100f + (comp.OriginalTemperature - 100f) * progress;
-
                 _atmosphere.SetMapTemperature(comp.MapEntity, temperature);
             });
         }
