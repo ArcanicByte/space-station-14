@@ -28,8 +28,9 @@ public sealed partial class BlizzardRule : StationEventSystem<BlizzardRuleCompon
     [Dependency] private IGameMapManager _gameMapManager = default!;
 
     private float _effectTimer = 0;
-    private float _startingTemperature;
-    private EntityUid _mapEntity;
+
+    public EntityUid _mapEntity;
+    public float _startingTemperature;
 
     public override void Initialize()
     {
