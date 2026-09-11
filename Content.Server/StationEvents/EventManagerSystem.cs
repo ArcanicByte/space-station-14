@@ -184,11 +184,6 @@ public sealed partial class EventManagerSystem : EntitySystem
             if (!CanRun(eventproto, stationEvent, playerCount.Value, currentTime.Value))
                 continue;
 
-            // Starlight-Start
-            if (!IsMapAllowed(stationEvent))
-                continue;
-            //Starlight-End
-
             limitedEvents.Add(eventproto, stationEvent);
         }
 
@@ -352,6 +347,11 @@ public sealed partial class EventManagerSystem : EntitySystem
         {
             return false;
         }
+
+        // Starlight-Start
+        if (!IsMapAllowed(stationEvent))
+            return false;
+        // Starlight-End
 
         return true;
     }
