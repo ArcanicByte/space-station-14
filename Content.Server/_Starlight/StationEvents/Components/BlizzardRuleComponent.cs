@@ -18,6 +18,8 @@ public sealed partial class BlizzardRuleComponent : Component
 
     public MapId Map; // where old weather was originally
 
+    public EntityUid MapEntity;
+
     public GasMixture OriginalMixture = default!; // atmosphere before event
 
     public float OriginalTemperature;
