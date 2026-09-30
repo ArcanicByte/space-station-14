@@ -153,6 +153,7 @@ public sealed partial class FoodSequenceSystem : SharedFoodSequenceSystem
             start.Comp.Finished = true;
 
         UpdateFoodName(start);
+        UpdateItemSize(start, user); // Starlight
         MergeFoodSolutions(start.Owner, element.Owner);
         MergeFlavorProfiles(start, element);
         MergeTrash(start.Owner, element.Owner);

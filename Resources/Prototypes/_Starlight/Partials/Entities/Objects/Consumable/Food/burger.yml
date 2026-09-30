@@ -1,0 +1,8 @@
+# Prototypes\Entities\Objects\Consumable\Food\burger.yml
+- type: !PartialOnly entity
+  id: FoodBreadBunBottom
+  components:
+  - type: Item
+    size: Tiny
+  - type: FoodSequenceStartPoint
+    filledSize: Normal

@@ -1,0 +1,8 @@
+# Prototypes\Entities\Objects\Consumable\Food\cottonburger.yml
+- type: !PartialOnly entity
+  id: FoodCottonBunBottom
+  components:
+  - type: Item
+    size: Tiny
+  - type: FoodSequenceStartPoint
+    filledSize: Normal
