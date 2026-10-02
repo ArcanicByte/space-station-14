@@ -23,6 +23,12 @@ public sealed partial class PaperWindow
     public ProtoId<LanguagePrototype>? SelectedLanguage { get; private set; }
 
     private readonly List<ProtoId<LanguagePrototype>> _languageOptions = [];
+    private string? _saveButtonText;
+    private static readonly TimeSpan _saveCooldown = TimeSpan.FromSeconds(0.25);
+    private static TimeSpan s_saveCooldownEnd;
+    // The text box fires its change event before moving the cursor, so edits are handled next frame.
+    private string _trackedText = string.Empty;
+    private bool _editPending;
 
     public void InitializeLanguageBar()
     {
@@ -40,14 +46,6 @@ public sealed partial class PaperWindow
         OnSaved += _ => s_saveCooldownEnd = _timing.RealTime + _saveCooldown;
         _saveButtonText = SaveButton.Text;
     }
-
-    private string? _saveButtonText;
-
-    // Longer than the server's cooldown, so the server rarely refuses a save.
-    private static readonly TimeSpan _saveCooldown = TimeSpan.FromSeconds(0.25);
-
-    // Static so it covers every paper.
-    private static TimeSpan s_saveCooldownEnd;
 
     private void UpdateSaveCooldown()
     {
@@ -102,10 +100,7 @@ public sealed partial class PaperWindow
     public void ShowWithoutText(bool writing)
     {
         // No stamps yet either, so they lay out around the text when it arrives.
-        Populate(new PaperComponent.PaperBoundUserInterfaceState(string.Empty,
-            [],
-            writing ? PaperComponent.PaperAction.Write : PaperComponent.PaperAction.Read));
-
+        Populate(new PaperComponent.PaperBoundUserInterfaceState(string.Empty, [], writing ? PaperComponent.PaperAction.Write : PaperComponent.PaperAction.Read));
         BlankPaperIndicator.Visible = false;
     }
 
@@ -135,10 +130,6 @@ public sealed partial class PaperWindow
         UpdateFillState();
         ResyncLanguageTracking();
     }
-
-    // The text box fires its change event before moving the cursor, so edits are handled next frame.
-    private string _trackedText = string.Empty;
-    private bool _editPending;
 
     /// <summary>
     /// Call after the editor text is set by code, so it isn't treated as typing.
