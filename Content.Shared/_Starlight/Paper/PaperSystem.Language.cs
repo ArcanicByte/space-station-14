@@ -25,7 +25,7 @@ public sealed partial class PaperSystem
 
         entity.Comp.Writers.Remove(args.Actor);
 
-        // Closes from server state shouldn't restart the delay.
+        // Closes from server state shouldn't restart the delay
         if (!_timing.ApplyingState)
         {
             RemoveExpiredReopenTimes(entity.Comp);

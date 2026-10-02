@@ -39,7 +39,7 @@ public abstract partial class SharedPaperLanguageSystem
 
     private static void AddSection(List<PaperSection> sections, ProtoId<LanguagePrototype>? language, string text, int? id)
     {
-        // Hidden sections are kept even when empty, so they can still be matched up on save.
+        // Hidden sections are kept even when empty, so they can still be matched up on save
         if (text.Length == 0 && id == null)
             return;
 
@@ -97,9 +97,7 @@ public abstract partial class SharedPaperLanguageSystem
     }
 
     public static string OpeningTag(ProtoId<LanguagePrototype> language) => $"[lang=\"{language}\"]";
-
     public const string ClosingTag = "[/lang]";
-
     public static string StripLanguageTags(string content) => _languageTagRegex.Replace(content, string.Empty);
 
     /// <summary>
