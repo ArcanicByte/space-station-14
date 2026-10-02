@@ -114,14 +114,14 @@ public sealed partial class LabelSystem : EntitySystem
             if (!TryComp<PaperComponent>(item, out var paper))
                 return;
 
-            if (string.IsNullOrWhiteSpace(paper.Content))
+            if (!paper.HasWriting) // Starlight-edit
             {
                 args.PushMarkup(Loc.GetString("comp-paper-label-has-label-blank"));
                 return;
             }
 
             args.PushMarkup(Loc.GetString("comp-paper-label-has-label"));
-            var text = paper.Content;
+            var text = GetReadableLabelText((item, paper), args.Examiner); // Starlight-edit
             // STARLIGHT: Remove MOST markup for the examine text.
             var message = FormattedMessage.FromMarkupPermissive(text.TrimEnd()).SanitizeWhitelist(FormattedMessageSanitizer.PaperLabelTags).ToMarkup();
             args.PushMarkup(message);

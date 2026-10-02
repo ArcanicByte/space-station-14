@@ -1,5 +1,6 @@
 - type: language
   id: Thaveyan
+  writable: true
   icon: LanguageIconThaveyan
   chatPrefix: thv
   speech:

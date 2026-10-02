@@ -1,6 +1,7 @@
 # Surprise, it's Greek!
 - type: language
   id: Classical
+  writable: true
   speech:
     color: "#b2b097"
   icon: LanguageIconClassical

@@ -29,6 +29,7 @@ public abstract partial class SharedDevilSystem : EntitySystem
     [Dependency] private IEntityManager _entity = default!;
     [Dependency] private SharedPvsOverrideSystem _pvs = default!;
     [Dependency] private ISharedPlayerManager _player = default!;
+    [Dependency] private SharedPaperLanguageSystem _paperLanguage = default!;
 
     private Dictionary<ProtoId<DamnationPrototype>, DamnationPrototype> _damnations = new();
     public override void Initialize()
@@ -135,10 +136,23 @@ public abstract partial class SharedDevilSystem : EntitySystem
         return data;
     }
 
-    private void OnExamineEvent(EntityUid uid, InfernalContractComponent contractComp, ref ExaminedEvent args)
+    protected virtual void OnExamineEvent(EntityUid uid, InfernalContractComponent contractComp, ref ExaminedEvent args)
     {
+        // Anyone can tell it's signed. Signing also clears unfilled clauses, so the terms can't be parsed anymore.
+        if (contractComp.Completed)
+        {
+            args.PushMarkup(Loc.GetString("infernal-contract-examined-Signed"));
+            return;
+        }
+
         var contractValidity = GetContractValidity(uid);
         if (contractValidity == InfernalContractValidity.NotAContract) return;
+
+        if (TryComp<PaperComponent>(uid, out var paper) && !_paperLanguage.CanReadAll((uid, paper), args.Examiner))
+        {
+            args.PushMarkup(Loc.GetString("infernal-contract-examined-unreadable"));
+            return;
+        }
 
         args.PushMarkup(Loc.GetString($"infernal-contract-examined-{contractValidity}"));
 
@@ -166,8 +180,7 @@ public abstract partial class SharedDevilSystem : EntitySystem
 
         if (GetContractValidity(uid) != InfernalContractValidity.Valid)
         {
-            args.FailReason = Loc.GetString("infernal-contract-popup-fail");
-            args.Cancelled = true;
+            FailSigning(ref args, Loc.GetString("infernal-contract-popup-fail"));
             return;
         }
 
@@ -175,10 +188,11 @@ public abstract partial class SharedDevilSystem : EntitySystem
         // do borgs even have souls? we did recently downgrade them to property damage only to hurt them
         if (HasComp<DevilComponent>(args.Signer) || HasComp<DamnedComponent>(args.Signer) || HasComp<BorgChassisComponent>(args.Signer))
         {
-            args.FailReason = Loc.GetString("infernal-contract-popup-fail-self");
-            args.Cancelled = true;
+            FailSigning(ref args, Loc.GetString("infernal-contract-popup-fail-self"));
             return;
         }
+
+        _popup.PopupEntity(Loc.GetString("paper-component-action-signed-self", ("target", uid)), args.Signer, args.Signer);
 
         // ok now we damn
         var contract = GetContractContent(uid);
@@ -189,6 +203,16 @@ public abstract partial class SharedDevilSystem : EntitySystem
 
         contractComp.Completed = true;
         Dirty(uid, contractComp);
+    }
+
+    /// <summary>
+    /// Stops signing and tells the signer why.
+    /// </summary>
+    private void FailSigning(ref PaperSignedEvent args, string reason)
+    {
+        args.FailReason = reason;
+        args.Cancelled = true;
+        _popup.PopupEntity(reason, args.Signer, args.Signer);
     }
 
     /// <summary>

@@ -61,6 +61,7 @@ public sealed partial class PaperSystem : EntitySystem
         SubscribeLocalEvent<PaperComponent, GetVerbsEvent<AlternativeVerb>>(AddSignVerb);
         SubscribeLocalEvent<PaperComponent, PaperSignatureRequestMessage>(OnSignatureRequest); // Starlight-edit
         SubscribeLocalEvent<PaperComponent, PaperDateTimeRequestMessage>(OnDateTimeRequest); // Starlight-edit
+        InitializeLanguage(); // Starlight-edit
 
         _paperQuery = GetEntityQuery<PaperComponent>();
     }
@@ -91,6 +92,7 @@ public sealed partial class PaperSystem : EntitySystem
     private void BeforeUIOpen(Entity<PaperComponent> entity, ref BeforeActivatableUIOpenEvent args)
     {
         entity.Comp.Mode = PaperAction.Read;
+        entity.Comp.Writers.Remove(args.User); // Starlight-edit
         UpdateUserInterface(entity);
     }
 
@@ -101,7 +103,7 @@ public sealed partial class PaperSystem : EntitySystem
 
         using (args.PushGroup(nameof(PaperComponent)))
         {
-            if (entity.Comp.Content != "")
+            if (entity.Comp.HasWriting) // Starlight-edit
             {
                 args.PushMarkup(
                     Loc.GetString(
@@ -152,7 +154,7 @@ public sealed partial class PaperSystem : EntitySystem
         var editable = entity.Comp.StampedBy.Count == 0 || _tagSystem.HasTag(args.Used, WriteIgnoreStampsTag);
         if (_tagSystem.HasTag(args.Used, WriteTag))
         {
-            if (editable)
+            if (editable && CanOpenAgain(entity, args.User)) // Starlight-edit
             {
                 if (entity.Comp.EditingDisabled)
                 {
@@ -182,6 +184,7 @@ public sealed partial class PaperSystem : EntitySystem
                 RaiseLocalEvent(args.Used, ref writeEvent);
 
                 entity.Comp.Mode = PaperAction.Write;
+                entity.Comp.Writers.Add(args.User); // Starlight-edit
                 _uiSystem.OpenUi(entity.Owner, PaperUiKey.Key, args.User);
                 UpdateUserInterface(entity);
             }
@@ -225,6 +228,11 @@ public sealed partial class PaperSystem : EntitySystem
 
     private void OnInputTextMessage(Entity<PaperComponent> entity, ref PaperInputTextMessage args)
     {
+        // Starlight-start
+        if (!CanSave(entity, args.Actor, args.Text))
+            return;
+        // Starlight-end
+
         var ev = new PaperWriteAttemptEvent(entity.Owner, args.Actor); // starlight
         RaiseLocalEvent(args.Actor, ref ev);
         RaiseLocalEvent(entity.Owner, ref ev); // starlight
@@ -233,9 +241,12 @@ public sealed partial class PaperSystem : EntitySystem
 
         if (args.Text.Length <= entity.Comp.ContentSize)
         {
-            SetContent(entity, args.Text);
+            // Starlight-start
+            var content = MergeLanguageEdit(entity, args.Actor, args.Text);
+            SetContent(entity, content);
 
-            var paperStatus = string.IsNullOrWhiteSpace(args.Text) ? PaperStatus.Blank : PaperStatus.Written;
+            var paperStatus = string.IsNullOrWhiteSpace(content) ? PaperStatus.Blank : PaperStatus.Written;
+            // Starlight-end
 
             if (TryComp<AppearanceComponent>(entity, out var appearance))
                 _appearance.SetData(entity, PaperVisuals.Status, paperStatus, appearance);
@@ -245,12 +256,13 @@ public sealed partial class PaperSystem : EntitySystem
 
             _adminLogger.Add(LogType.Chat,
                 LogImpact.Low,
-                $"{ToPrettyString(args.Actor):player} has written on {ToPrettyString(entity):entity} the following text: {args.Text}");
+                $"{ToPrettyString(args.Actor):player} has written on {ToPrettyString(entity):entity} the following text: {content}"); // Starlight-edit
 
             _audio.PlayPvs(entity.Comp.Sound, entity);
         }
 
         entity.Comp.Mode = PaperAction.Read;
+        entity.Comp.Writers.Remove(args.Actor); // Starlight-edit
         UpdateUserInterface(entity);
     }
 
@@ -452,12 +464,8 @@ public sealed partial class PaperSystem : EntitySystem
         _appearance.SetData(entity, PaperVisuals.Status, status, appearance);
     }
 
-    private void UpdateUserInterface(Entity<PaperComponent> entity)
-    {
-        _uiSystem.SetUiState(entity.Owner, PaperUiKey.Key, new PaperBoundUserInterfaceState(entity.Comp.Content, entity.Comp.StampedBy, entity.Comp.Mode)); // Starlight-edit
-    }
-
     # region Starlight
+    private void UpdateUserInterface(Entity<PaperComponent> entity) => UpdateLanguageUserInterface(entity);
 
     private void OnSignatureRequest(Entity<PaperComponent> entity, ref PaperSignatureRequestMessage args)
     {

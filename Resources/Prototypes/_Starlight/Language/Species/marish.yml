@@ -1,5 +1,6 @@
 - type: language
   id: Marish
+  writable: true
   icon: LanguageIconShadekin
   chatPrefix: mar
   speech:

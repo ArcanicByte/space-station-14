@@ -47,6 +47,18 @@ public sealed partial class LanguagePrototype : IPrototype
     /// </summary>
     [DataField] public string? ChatPrefix;
 
+    /// <summary>
+    /// Whether this language can be written on paper.
+    /// </summary>
+    [DataField]
+    public bool Writable = false;
+
+    /// <summary>
+    /// Color of this language on paper. Falls back to the speech color, then the paper's ink color.
+    /// </summary>
+    [DataField]
+    public Color? PaperColor;
+
     #region utility
     /// <summary>
     ///     The in-world name of this language, localized.

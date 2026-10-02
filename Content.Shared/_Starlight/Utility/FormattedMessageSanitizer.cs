@@ -19,7 +19,7 @@ public static class FormattedMessageSanitizer
     /// </summary>
     public static string[] PaperLabelTags =
     [
-        "color", "bold", "bolditalic", "italic", "mono", "icon", "scramble", "font", "head", "bullet", "dots", "dothead"
+        "color", "bold", "bolditalic", "italic", "mono", "icon", "scramble", "font", "head", "bullet", "dots", "dothead", "lang"
     ];
 
     /// <param name="message">The message to sanitize</param>

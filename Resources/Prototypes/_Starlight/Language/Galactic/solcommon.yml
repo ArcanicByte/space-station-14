@@ -1,5 +1,7 @@
 - type: language
   id: SolCommon
+  writable: true
+  paperColor: "#000000"
   icon: LanguageIconSolCom
   chatPrefix: sol
   speech:

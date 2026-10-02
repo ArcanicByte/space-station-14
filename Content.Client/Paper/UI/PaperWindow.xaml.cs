@@ -303,7 +303,7 @@ namespace Content.Client.Paper.UI
             // The markup system converts [form] and [signature] tags into interactive buttons
             var fm = new FormattedMessage();
             fm.AddMarkupPermissive(state.Text);
-            WrittenTextLabel.SetMessage(fm, UserFormattableTags.BaseAllowedTags, _writtenTextColor);
+            WrittenTextLabel.SetMessage(fm, PaperFormattableTags.AllowedTags, _writtenTextColor); // Starlight-edit
 
             // Add extra bottom margin based on tag count to prevent cutoff (only in read mode)
             var tagCount = CountTags(state.Text);

@@ -12,7 +12,7 @@ public sealed partial class ParsablePaperSystem : EntitySystem
     {
         if (!TryComp<PaperComponent>(paper, out var paperComp) || !TryComp<ParsablePaperComponent>(paper, out var parsableComp)) return false;
 
-        var content = paperComp.Content;
+        var content = SharedPaperLanguageSystem.StripLanguageTags(paperComp.Content);
         foreach (var test in parsableComp.RequiredPatterns)
         {
             var rule = new Regex(test);
@@ -32,7 +32,7 @@ public sealed partial class ParsablePaperSystem : EntitySystem
         if (!IsPaperValid(paper)) return null;
         if (!TryComp<PaperComponent>(paper, out var paperComp) || !TryComp<ParsablePaperComponent>(paper, out var parsableComp)) return null;
 
-        string content = paperComp.Content;
+        var content = SharedPaperLanguageSystem.StripLanguageTags(paperComp.Content);
 
         Dictionary<string, List<string>> output = new();
         foreach (var valuePattern in parsableComp.RequestedValuePatterns)

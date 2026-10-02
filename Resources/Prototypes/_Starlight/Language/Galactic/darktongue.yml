@@ -1,6 +1,7 @@
 # A nasty language for use by cultists, demons, and other evil things
 - type: language
   id: Darktongue
+  writable: true
   speech:
     color: "#ff2202"
     fontId: Darktongue

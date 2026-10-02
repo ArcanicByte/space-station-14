@@ -1,5 +1,6 @@
 - type: language
   id: Moffic
+  writable: true
   icon: LanguageIconMoth
   chatPrefix: mof
   speech:

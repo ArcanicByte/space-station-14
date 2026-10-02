@@ -1,5 +1,6 @@
 - type: language
   id: Scratch
+  writable: true
   icon: LanguageIconAvali
   chatPrefix: scr
   speech:

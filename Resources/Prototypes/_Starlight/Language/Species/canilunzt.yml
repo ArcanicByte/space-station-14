@@ -1,5 +1,6 @@
 - type: language
   id: Canilunzt
+  writable: true
   icon: LanguageIconVulp
   chatPrefix: can
   speech:
