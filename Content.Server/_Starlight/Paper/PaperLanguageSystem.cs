@@ -18,17 +18,6 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
     [Dependency] private SharedPopupSystem _popup = default!;
     [Dependency] private SharedUserInterfaceSystem _ui = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<PaperComponent, ComponentStartup>(OnPaperStartup);
-        SubscribeLocalEvent<PaperComponent, BoundUIOpenedEvent>(OnUIOpened);
-        SubscribeLocalEvent<PaperComponent, PaperViewRequestMessage>(OnViewRequest);
-        SubscribeLocalEvent<PaperComponent, PaperSelectLanguageMessage>(OnSelectLanguage);
-        SubscribeLocalEvent<UserInterfaceUserComponent, LanguagesUpdateEvent>(OnLanguagesUpdate);
-    }
-
     public override void UpdateViews(Entity<PaperComponent> paper)
     {
         UpdateHasWriting(paper);
@@ -70,6 +59,7 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
         _ui.ServerSendUiMessage(paper.Owner, PaperUiKey.Key, message, actor);
     }
 
+    [SubscribeLocalEvent]
     private void OnLanguagesUpdate(Entity<UserInterfaceUserComponent> ent, ref LanguagesUpdateEvent args)
     {
         foreach (var (uiEntity, keys) in ent.Comp.OpenInterfaces)
@@ -79,14 +69,17 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnUIOpened(Entity<PaperComponent> paper, ref BoundUIOpenedEvent args)
     {
         if (args.UiKey.Equals(PaperUiKey.Key))
             SendView(paper, args.Actor);
     }
 
+    [SubscribeLocalEvent]
     private void OnViewRequest(Entity<PaperComponent> paper, ref PaperViewRequestMessage args) => SendView(paper, args.Actor, force: true);
 
+    [SubscribeLocalEvent]
     private void OnSelectLanguage(Entity<PaperComponent> paper, ref PaperSelectLanguageMessage args) =>
         EnsureComp<PaperLanguageStateComponent>(paper).WritingLanguages[args.Actor] = args.Language;
 
@@ -162,6 +155,7 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
 
     private string GetLanguageName(ProtoId<LanguagePrototype> language) => _prototype.TryIndex(language, out var proto) ? proto.Name : language.Id;
 
+    [SubscribeLocalEvent]
     private void OnPaperStartup(Entity<PaperComponent> paper, ref ComponentStartup args) => UpdateHasWriting(paper);
 
     private void UpdateHasWriting(Entity<PaperComponent> paper)

@@ -11,18 +11,13 @@ public sealed partial class PaperSystem
     [Dependency] private SharedPaperLanguageSystem _paperLanguage = default!;
     [Dependency] private IGameTiming _timing = default!;
 
-    private void InitializeLanguage()
-    {
-        SubscribeLocalEvent<PaperComponent, BoundUIClosedEvent>(OnUIClosed);
-        SubscribeLocalEvent<PaperComponent, ActivatableUIOpenAttemptEvent>(OnOpenAttempt);
-    }
-
     private void UpdateLanguageUserInterface(Entity<PaperComponent> entity) => _paperLanguage.UpdateViews(entity);
 
     private bool CanSave(Entity<PaperComponent> entity, EntityUid actor, string text) => _paperLanguage.CanSave(entity, actor, text);
 
     private string MergeLanguageEdit(Entity<PaperComponent> entity, EntityUid actor, string text) => _paperLanguage.SaveEdit(entity, actor, text);
 
+    [SubscribeLocalEvent]
     private void OnUIClosed(Entity<PaperComponent> entity, ref BoundUIClosedEvent args)
     {
         if (!args.UiKey.Equals(PaperUiKey.Key))
@@ -50,6 +45,7 @@ public sealed partial class PaperSystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnOpenAttempt(Entity<PaperComponent> entity, ref ActivatableUIOpenAttemptEvent args)
     {
         if (!CanOpenAgain(entity, args.User))
