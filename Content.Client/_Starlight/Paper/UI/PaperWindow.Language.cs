@@ -7,6 +7,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace Content.Client.Paper.UI;
 
@@ -90,6 +91,7 @@ public sealed partial class PaperWindow
     /// </summary>
     public void UpdateLanguageBar(List<ProtoId<LanguagePrototype>> languages, ProtoId<LanguagePrototype>? defaultLanguage, bool isEditing)
     {
+        var timer = Stopwatch.GetTimestamp();
         // Forms are answered in the selected language, so readers need it too
         LanguageBar.Visible = isEditing || _currentRawText.Contains("[form]", StringComparison.Ordinal);
 
@@ -119,6 +121,7 @@ public sealed partial class PaperWindow
 
         if (SelectedLanguage is { } current && _languageOptions.IndexOf(current) is var index and >= 0)
             LanguageSelector.SelectId(index);
+        Logger.GetSawmill("paper.lang").Info($"UpdateLanguageBar took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
     }
 
     public void ShowWithoutText(bool writing)
@@ -133,6 +136,7 @@ public sealed partial class PaperWindow
     /// </summary>
     public void RefreshStamps(List<StampDisplayInfo> stamps)
     {
+        var timer = Stopwatch.GetTimestamp();
         if (InputContainer.Visible)
             return;
 
@@ -140,10 +144,12 @@ public sealed partial class PaperWindow
         StampDisplay.RemoveStamps();
         foreach (var stamp in stamps)
             StampDisplay.AddStamp(new StampWidget { StampInfo = stamp });
+        Logger.GetSawmill("paper.lang").Info($"RefreshStamps took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
     }
 
     private void TranslateInput()
     {
+        var timer = Stopwatch.GetTimestamp();
         if (SelectedLanguage is not { } language)
             return;
 
@@ -153,6 +159,7 @@ public sealed partial class PaperWindow
         Input.InsertAtCursor(translated);
         UpdateFillState();
         ResyncLanguageTracking();
+        Logger.GetSawmill("paper.lang").Info($"TranslateInput took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
     }
 
     /// <summary>
@@ -189,6 +196,7 @@ public sealed partial class PaperWindow
     /// </summary>
     private void TagInsertedText(string previous, string text, int cursor, ProtoId<LanguagePrototype> language)
     {
+        var timer = Stopwatch.GetTimestamp();
         cursor = Math.Clamp(cursor, 0, text.Length);
 
         // The inserted text ends at the cursor
@@ -254,6 +262,7 @@ public sealed partial class PaperWindow
         Input.CursorPosition = new TextEdit.CursorPos(newCursor, TextEdit.LineBreakBias.Top);
         UpdateFillState();
         ResyncLanguageTracking();
+        Logger.GetSawmill("paper.lang").Info($"TagInsertedText took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
     }
 
     private void UpdateLockedWarning()
@@ -267,6 +276,7 @@ public sealed partial class PaperWindow
     /// </summary>
     private void UpdateSaveWarning()
     {
+        var timer = Stopwatch.GetTimestamp();
         string? warning = null;
 
         if (InputContainer.Visible && _languageOptions.Count == 0)
@@ -299,6 +309,7 @@ public sealed partial class PaperWindow
             SaveWarningLabel.SetMessage(warning, null, Color.Gold);
 
         SaveWarningLabel.Visible = warning != null;
+        Logger.GetSawmill("paper.lang").Info($"UpdateSaveWarning took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
     }
 
     private string GetLanguageName(ProtoId<LanguagePrototype> language) =>

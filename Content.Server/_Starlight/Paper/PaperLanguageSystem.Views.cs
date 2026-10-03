@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -31,6 +32,7 @@ public sealed partial class PaperLanguageSystem
     /// </summary>
     private static List<PaperSection> GetSections(Entity<PaperComponent> paper, PaperLanguageStateComponent state)
     {
+        var timer = Stopwatch.GetTimestamp();
         var content = paper.Comp.Content;
         if (ReferenceEquals(state.ScrambledContent, content))
             return state.Sections;
@@ -43,6 +45,7 @@ public sealed partial class PaperLanguageSystem
         }
 
         state.ScrambledContent = content;
+        Logger.GetSawmill("paper.lang").Info($"GetSections took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
         return state.Sections;
     }
 
@@ -59,6 +62,7 @@ public sealed partial class PaperLanguageSystem
 
     public override string GetStyledView(Entity<PaperComponent> paper, EntityUid viewer)
     {
+        var timer = Stopwatch.GetTimestamp();
         var state = EnsureComp<PaperLanguageStateComponent>(paper);
 
         var builder = new StringBuilder();
@@ -76,6 +80,7 @@ public sealed partial class PaperLanguageSystem
             builder.Append(trailing);
         }
 
+        Logger.GetSawmill("paper.lang").Info($"GetStyledView took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
         return builder.ToString();
     }
 
@@ -84,6 +89,7 @@ public sealed partial class PaperLanguageSystem
     /// </summary>
     private string GetUiView(Entity<PaperComponent> paper, PaperLanguageStateComponent state, EntityUid viewer, bool editing)
     {
+        var timer = Stopwatch.GetTimestamp();
         if (!state.HiddenSections.TryGetValue(viewer, out var hidden))
         {
             hidden = [];
@@ -140,6 +146,7 @@ public sealed partial class PaperLanguageSystem
                 hidden.Remove(id);
         }
 
+        Logger.GetSawmill("paper.lang").Info($"GetUiView took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
         return builder.ToString();
     }
 
@@ -173,6 +180,7 @@ public sealed partial class PaperLanguageSystem
 
     private string Obfuscate(string text, ProtoId<LanguagePrototype> language)
     {
+        var timer = Stopwatch.GetTimestamp();
         if (!_prototype.TryIndex(language, out var proto))
             return text;
 
@@ -186,6 +194,7 @@ public sealed partial class PaperLanguageSystem
         }
 
         AppendObfuscated(builder, text[position..], proto);
+        Logger.GetSawmill("paper.lang").Info($"Obfuscate took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
         return builder.ToString();
     }
 

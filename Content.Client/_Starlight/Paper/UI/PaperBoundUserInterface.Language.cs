@@ -1,4 +1,5 @@
 // ReSharper disable CheckNamespace
+using System.Diagnostics;
 using Content.Shared._Starlight.Paper;
 using Content.Shared.Paper;
 using static Content.Shared.Paper.PaperComponent;
@@ -9,6 +10,7 @@ public sealed partial class PaperBoundUserInterface
 {
     private void OpenLanguage()
     {
+        var timer = Stopwatch.GetTimestamp();
         if (_window == null)
             return;
 
@@ -29,6 +31,7 @@ public sealed partial class PaperBoundUserInterface
         }
 
         SendMessage(new PaperViewRequestMessage());
+        Logger.GetSawmill("paper.lang").Info($"OpenLanguage took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
     }
 
     /// <summary>
@@ -49,6 +52,7 @@ public sealed partial class PaperBoundUserInterface
 
     protected override void ReceiveMessage(BoundUserInterfaceMessage message)
     {
+        var timer = Stopwatch.GetTimestamp();
         base.ReceiveMessage(message);
 
         if (message is not PaperViewMessage view || _window == null)
@@ -62,5 +66,6 @@ public sealed partial class PaperBoundUserInterface
         _window.Populate(view.State);
         _window.ResyncLanguageTracking();
         _window.UpdateLanguageBar(view.WritableLanguages, view.DefaultLanguage, view.State.Mode == PaperAction.Write);
+        Logger.GetSawmill("paper.lang").Info($"ReceiveMessage took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
     }
 }

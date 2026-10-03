@@ -8,6 +8,7 @@ using Content.Shared.UserInterface;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using static Content.Shared.Paper.PaperComponent;
+using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace Content.Server._Starlight.Paper;
 
@@ -23,15 +24,19 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
 
     public override void UpdateViews(Entity<PaperComponent> paper)
     {
+        var timer = Stopwatch.GetTimestamp();
         UpdateHasWriting(paper);
 
         foreach (var actor in _ui.GetActors(paper.Owner, PaperUiKey.Key))
             SendView(paper, actor);
+
+        Logger.GetSawmill("paper.lang").Info($"UpdateViews took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
     }
 
     /// <param name="text">Text to show instead of the paper's, like text given back after a failed save.</param>
     private void SendView(Entity<PaperComponent> paper, EntityUid actor, string? text = null, bool force = false)
     {
+        var timer = Stopwatch.GetTimestamp();
         var state = EnsureComp<PaperLanguageStateComponent>(paper);
         var mode = paper.Comp.Writers.Contains(actor) ? PaperAction.Write : PaperAction.Read;
         var languages = GetWritableLanguages(actor);
@@ -63,16 +68,21 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
             view.DefaultLanguage,
             paperText?.Length - shown.Length);
         _ui.ServerSendUiMessage(paper.Owner, PaperUiKey.Key, message, actor);
+
+        Logger.GetSawmill("paper.lang").Info($"SendView took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
     }
 
     [SubscribeLocalEvent]
     private void OnLanguagesUpdate(Entity<UserInterfaceUserComponent> ent, ref LanguagesUpdateEvent args)
     {
+        var timer = Stopwatch.GetTimestamp();
         foreach (var (uiEntity, keys) in ent.Comp.OpenInterfaces)
         {
             if (keys.Contains(PaperUiKey.Key) && TryComp<PaperComponent>(uiEntity, out var paper))
                 SendView((uiEntity, paper), ent.Owner, force: true);
         }
+
+        Logger.GetSawmill("paper.lang").Info($"OnLanguagesUpdate took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
     }
 
     [SubscribeLocalEvent]
@@ -106,6 +116,8 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
     /// </summary>
     public override bool CanSave(Entity<PaperComponent> paper, EntityUid actor, string text)
     {
+        var timer = Stopwatch.GetTimestamp();
+
         // Without a language, saving just closes the editor. Forms in read mode still work
         if (paper.Comp.Writers.Contains(actor) && GetWritableLanguages(actor).Count == 0)
         {
@@ -138,6 +150,8 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
         }
 
         _pendingMerge = (paper.Owner, actor, text, result);
+
+        Logger.GetSawmill("paper.lang").Info($"CanSave took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
         return true;
     }
 
@@ -155,6 +169,7 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
 
     public override string SaveEdit(Entity<PaperComponent> paper, EntityUid actor, string text)
     {
+        var timer = Stopwatch.GetTimestamp();
         var state = EnsureComp<PaperLanguageStateComponent>(paper);
 
         // Reuse the merge from CanSave
@@ -185,6 +200,7 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
         if (result.RemovedSections > 0)
             _popup.PopupEntity(Loc.GetString("paper-language-removed", ("count", result.RemovedSections)), actor, actor);
 
+        Logger.GetSawmill("paper.lang").Info($"SaveEdit took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
         return result.Content;
     }
 

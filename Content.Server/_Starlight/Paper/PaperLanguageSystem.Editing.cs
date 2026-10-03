@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using Content.Shared._Starlight.Language;
@@ -27,6 +28,7 @@ public sealed partial class PaperLanguageSystem
         EntityUid editor,
         string submitted)
     {
+        var timer = Stopwatch.GetTimestamp();
         var writingLanguage = state.WritingLanguages.TryGetValue(editor, out var requested) && CanWrite(editor, requested)
             ? requested
             : GetDefaultWritingLanguage(editor);
@@ -109,6 +111,7 @@ public sealed partial class PaperLanguageSystem
 
         // Leftover locked sections were changed or removed. Duplicates can fail too, so cap it
         var erased = Math.Min(tamperedSections, lockedLeft);
+        Logger.GetSawmill("paper.lang").Info($"MergeEdit took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
         return new PaperMergeResult(Serialize(result), [..convertedFrom], writingLanguage, droppedText, erased, lockedLeft - erased);
     }
 
@@ -161,6 +164,7 @@ public sealed partial class PaperLanguageSystem
     /// </summary>
     private static bool TryMatchFills(string rendered, string submitted, out List<string?> fills)
     {
+        var timer = Stopwatch.GetTimestamp();
         fills = [];
         if (rendered == submitted)
             return true;
@@ -178,6 +182,7 @@ public sealed partial class PaperLanguageSystem
             fills.Add(value == CheckTag ? null : value);
         }
 
+        Logger.GetSawmill("paper.lang").Info($"TryMatchFills took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
         return true;
     }
 
@@ -204,6 +209,7 @@ public sealed partial class PaperLanguageSystem
     /// </summary>
     private static string Serialize(IEnumerable<(ProtoId<LanguagePrototype> Language, string Text)> sections)
     {
+        var timer = Stopwatch.GetTimestamp();
         var builder = new StringBuilder();
         var run = new StringBuilder();
         var whitespace = new StringBuilder();
@@ -241,6 +247,7 @@ public sealed partial class PaperLanguageSystem
 
         AppendRun(builder, runLanguage, run);
         builder.Append(whitespace);
+        Logger.GetSawmill("paper.lang").Info($"Serialize took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
         return builder.ToString();
     }
 

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using Content.Shared._Starlight.Language;
@@ -11,6 +12,7 @@ public abstract partial class SharedPaperLanguageSystem
 
     public static List<PaperSection> ParseSections(string content)
     {
+        var timer = Stopwatch.GetTimestamp();
         var sections = new List<PaperSection>();
         ProtoId<LanguagePrototype>? language = null;
         int? id = null;
@@ -34,6 +36,7 @@ public abstract partial class SharedPaperLanguageSystem
         }
 
         AddSection(sections, language, content[position..], id);
+        Logger.GetSawmill("paper.lang").Info($"ParseSections took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
         return sections;
     }
 
@@ -105,6 +108,7 @@ public abstract partial class SharedPaperLanguageSystem
     /// </summary>
     public static string TranslateUnlockedSections(string text, ProtoId<LanguagePrototype> language)
     {
+        var timer = Stopwatch.GetTimestamp();
         var builder = new StringBuilder();
         foreach (var section in ParseSections(text))
         {
@@ -116,6 +120,7 @@ public abstract partial class SharedPaperLanguageSystem
                 AppendSection(builder, language, null, section.Text);
         }
 
+        Logger.GetSawmill("paper.lang").Info($"TranslateUnlockedSections took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
         return builder.ToString();
     }
 }

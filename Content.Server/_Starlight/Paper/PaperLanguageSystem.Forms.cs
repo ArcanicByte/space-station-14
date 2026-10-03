@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -30,6 +31,7 @@ public sealed partial class PaperLanguageSystem
     [SubscribeLocalEvent]
     private void OnFormFill(Entity<PaperComponent> paper, ref PaperFormFillMessage args)
     {
+        var timer = Stopwatch.GetTimestamp();
         var actor = args.Actor;
         if (args.Text.Length > paper.Comp.ContentSize)
             return;
@@ -91,6 +93,7 @@ public sealed partial class PaperLanguageSystem
         _adminLogger.Add(LogType.Chat,
             LogImpact.Low,
             $"{ToPrettyString(actor):player} has filled in a form on {ToPrettyString(paper):entity} in {writing}: {answer}");
+        Logger.GetSawmill("paper.lang").Info($"OnFormFill took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
     }
 
     private static string CleanAnswer(string text) => string.Concat(text.Where(ch => !_answerBannedChars.Contains(ch))).Trim();
@@ -119,6 +122,7 @@ public sealed partial class PaperLanguageSystem
     /// </summary>
     private static int? FindForm(PaperLanguageStateComponent state, EntityUid actor, string content, int view, int index)
     {
+        var timer = Stopwatch.GetTimestamp();
         if (!state.ViewHistory.TryGetValue(actor, out var history)
             || history.Find(entry => entry.View == view).Content is not { } seen
             || FindNthForm(seen, index) is not { } form)
@@ -144,6 +148,7 @@ public sealed partial class PaperLanguageSystem
 
         // The text before it may have changed, like a new backslash escaping it
         var match = _formTagRegex.Match(content, position);
+        Logger.GetSawmill("paper.lang").Info($"FindForm took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
         return match.Success && match.Index == position ? position : null;
     }
 
