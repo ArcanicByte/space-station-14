@@ -14,28 +14,19 @@ public abstract partial class SharedPaperLanguageSystem
     {
         var timer = Stopwatch.GetTimestamp();
         var sections = new List<PaperSection>();
-        ProtoId<LanguagePrototype>? language = null;
-        int? id = null;
+        var open = new Stack<(ProtoId<LanguagePrototype> Language, int? Id)>();
         var position = 0;
 
         foreach (Match match in _languageTagRegex.Matches(content))
         {
+            var (language, id) = Top(open);
             AddSection(sections, language, content[position..match.Index], id);
             position = match.Index + match.Length;
-
-            if (match.Groups["lang"].Success)
-            {
-                language = match.Groups["lang"].Value;
-                id = match.Groups["id"].Success && int.TryParse(match.Groups["id"].Value, out var parsed) ? parsed : null;
-            }
-            else
-            {
-                language = null;
-                id = null;
-            }
+            ApplyTag(match, open);
         }
 
-        AddSection(sections, language, content[position..], id);
+        var (lastLanguage, lastId) = Top(open);
+        AddSection(sections, lastLanguage, content[position..], lastId);
         Logger.GetSawmill("paper.lang").Info($"ParseSections took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
         return sections;
     }
@@ -47,6 +38,32 @@ public abstract partial class SharedPaperLanguageSystem
             return;
 
         sections.Add(new PaperSection(language, text, id));
+    }
+
+    /// <summary>
+    /// Opens or closes a section. Tags nest, so closing one goes back to the language around it.
+    /// </summary>
+    private static void ApplyTag(Match tag, Stack<(ProtoId<LanguagePrototype> Language, int? Id)> open)
+    {
+        if (!tag.Groups["lang"].Success)
+        {
+            open.TryPop(out _);
+            return;
+        }
+
+        int? id = tag.Groups["id"].Success && int.TryParse(tag.Groups["id"].Value, out var parsed) ? parsed : null;
+        open.Push((tag.Groups["lang"].Value, id));
+    }
+
+    /// <summary>
+    /// The innermost open section, or untagged text if none are open.
+    /// </summary>
+    private static (ProtoId<LanguagePrototype>? Language, int? Id) Top(Stack<(ProtoId<LanguagePrototype> Language, int? Id)> open)
+    {
+        if (open.TryPeek(out var top))
+            return (top.Language, top.Id);
+
+        return (null, null);
     }
 
     protected static void AppendSection(StringBuilder builder, ProtoId<LanguagePrototype> language, int? id, string text)
@@ -85,18 +102,17 @@ public abstract partial class SharedPaperLanguageSystem
     /// </summary>
     public static (ProtoId<LanguagePrototype>? Language, bool Locked) GetSectionAt(string text, int position)
     {
-        ProtoId<LanguagePrototype>? language = null;
-        var locked = false;
+        var open = new Stack<(ProtoId<LanguagePrototype> Language, int? Id)>();
         foreach (Match match in _languageTagRegex.Matches(text))
         {
             if (match.Index + match.Length > position)
                 break;
 
-            language = match.Groups["lang"].Success ? match.Groups["lang"].Value : null;
-            locked = match.Groups["id"].Success;
+            ApplyTag(match, open);
         }
 
-        return (language, locked);
+        var (language, id) = Top(open);
+        return (language, id != null);
     }
 
     public static string OpeningTag(ProtoId<LanguagePrototype> language) => $"[lang=\"{language}\"]";
