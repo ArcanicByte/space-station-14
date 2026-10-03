@@ -22,4 +22,4 @@ paper-ui-cannot-save-warning = ⚠ You don't know any written languages, so your
 paper-ui-lost-language-warning = ⚠ You can no longer write {$languages}. Anything you changed in it will be written in {$language} when you save.
 paper-form-no-language = You don't know any written languages, so you can't fill this in.
 paper-form-changed = The paper changed, try again.
-paper-form-full = There's no room left on the paper.
+paper-full = There's no room left on the paper.

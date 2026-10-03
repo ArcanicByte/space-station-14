@@ -366,7 +366,7 @@ namespace Content.Client.Paper.UI
         {
             if (MaxInputLength != -1)
             {
-                var inputLength = Input.TextLength;
+                var inputLength = Input.TextLength + Math.Max(0, HiddenLength); // Starlight-edit
                 // Display current vs maximum character count
                 FillStatus.Text = Loc.GetString("paper-ui-fill-level",
                     ("currentLength", inputLength),

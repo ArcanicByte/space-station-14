@@ -28,6 +28,21 @@ public sealed partial class PaperWindow
     public int View { get; set; }
 
     /// <summary>
+    /// How much longer the paper is than the editor text, so the character count matches what a save would be.
+    /// </summary>
+    public int HiddenLength
+    {
+        get => _hiddenLength;
+        set
+        {
+            _hiddenLength = value;
+            UpdateFillState();
+        }
+    }
+
+    private int _hiddenLength;
+
+    /// <summary>
     /// Language new text is written in.
     /// </summary>
     public ProtoId<LanguagePrototype>? SelectedLanguage { get; private set; }

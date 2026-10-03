@@ -73,7 +73,7 @@ public sealed partial class PaperLanguageSystem
         var filled = content[..position] + TagAnswer(content, position, writing, answer) + content[(position + FormTag.Length)..];
         if (filled.Length > paper.Comp.ContentSize)
         {
-            _popup.PopupEntity(Loc.GetString("paper-form-full"), actor, actor);
+            _popup.PopupEntity(Loc.GetString("paper-full"), actor, actor);
             return;
         }
 

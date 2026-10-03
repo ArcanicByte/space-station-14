@@ -36,7 +36,8 @@ public sealed partial class PaperComponent
         int view,
         PaperBoundUserInterfaceState state,
         List<ProtoId<LanguagePrototype>> writableLanguages,
-        ProtoId<LanguagePrototype>? defaultLanguage) : BoundUserInterfaceMessage
+        ProtoId<LanguagePrototype>? defaultLanguage,
+        int? hiddenLength) : BoundUserInterfaceMessage
     {
         /// <summary>
         /// Counts up with each view sent to this player, so form fills can say which one they saw.
@@ -46,6 +47,11 @@ public sealed partial class PaperComponent
         public readonly PaperBoundUserInterfaceState State = state;
         public readonly List<ProtoId<LanguagePrototype>> WritableLanguages = writableLanguages;
         public readonly ProtoId<LanguagePrototype>? DefaultLanguage = defaultLanguage;
+
+        /// <summary>
+        /// Paper length minus this view's length, so the editor can count text it can't see. Null when the text isn't the paper's.
+        /// </summary>
+        public readonly int? HiddenLength = hiddenLength;
     }
 
     /// <summary>

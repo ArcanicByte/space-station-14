@@ -25,10 +25,9 @@ public sealed partial class PaperLanguageSystem
         Entity<PaperComponent> paper,
         PaperLanguageStateComponent state,
         EntityUid editor,
-        string submitted,
-        ProtoId<LanguagePrototype>? requestedLanguage)
+        string submitted)
     {
-        var writingLanguage = requestedLanguage is { } requested && CanWrite(editor, requested)
+        var writingLanguage = state.WritingLanguages.TryGetValue(editor, out var requested) && CanWrite(editor, requested)
             ? requested
             : GetDefaultWritingLanguage(editor);
 
@@ -107,8 +106,6 @@ public sealed partial class PaperLanguageSystem
                 droppedText = true;
             }
         }
-
-        state.HiddenSections.Remove(editor);
 
         // Leftover locked sections were changed or removed. Duplicates can fail too, so cap it
         var erased = Math.Min(tamperedSections, lockedLeft);

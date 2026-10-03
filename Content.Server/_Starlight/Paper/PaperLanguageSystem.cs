@@ -18,6 +18,9 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
     [Dependency] private SharedPopupSystem _popup = default!;
     [Dependency] private SharedUserInterfaceSystem _ui = default!;
 
+    // The merge done by CanSave, used by SaveEdit right after
+    private (EntityUid Paper, EntityUid Actor, string Text, PaperMergeResult Result)? _pendingMerge;
+
     public override void UpdateViews(Entity<PaperComponent> paper)
     {
         UpdateHasWriting(paper);
@@ -49,12 +52,18 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
         else
             state.SentViews.Remove(actor);
 
-        var uiState = new PaperBoundUserInterfaceState(
-            text ?? GetUiView(paper, state, actor, mode == PaperAction.Write),
-            paper.Comp.StampedBy,
-            mode);
+        var uiText = text ?? GetUiView(paper, state, actor, mode == PaperAction.Write);
+        var uiState = new PaperBoundUserInterfaceState(uiText, paper.Comp.StampedBy, mode);
 
-        var message = new PaperViewMessage(AddToHistory(state, actor, text == null ? paper.Comp.Content : null), uiState, languages, view.DefaultLanguage);
+        // How much longer the paper is than what they see, mostly markup in locked text
+        int? hiddenLength = text == null ? paper.Comp.Content.Length - uiText.Length : null;
+
+        var message = new PaperViewMessage(
+            AddToHistory(state, actor, text == null ? paper.Comp.Content : null),
+            uiState,
+            languages,
+            view.DefaultLanguage,
+            hiddenLength);
         _ui.ServerSendUiMessage(paper.Owner, PaperUiKey.Key, message, actor);
     }
 
@@ -127,25 +136,46 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
         }
 
         // Per entity, not per paper, so switching papers doesn't skip it
-        if (!TryComp<PaperSaveCooldownComponent>(actor, out var cooldown) || _timing.CurTime >= cooldown.NextSave)
-            return true;
+        if (TryComp<PaperSaveCooldownComponent>(actor, out var cooldown) && _timing.CurTime < cooldown.NextSave)
+        {
+            _popup.PopupEntity(Loc.GetString("paper-save-cooldown"), actor, actor);
+            GiveTextBack(paper, actor, text);
+            return false;
+        }
 
-        _popup.PopupEntity(Loc.GetString("paper-save-cooldown"), actor, actor);
+        // Locked text comes back in full, which can be longer than what the player sent. Shrinking is still fine
+        var result = MergeEdit(paper, EnsureComp<PaperLanguageStateComponent>(paper), actor, text);
+        if (result.Content.Length > paper.Comp.ContentSize && result.Content.Length > paper.Comp.Content.Length)
+        {
+            _popup.PopupEntity(Loc.GetString("paper-full"), actor, actor);
+            GiveTextBack(paper, actor, text);
+            return false;
+        }
 
-        // The editor clears itself on save, so give the text back
+        _pendingMerge = (paper.Owner, actor, text, result);
+        return true;
+    }
+
+    /// <summary>
+    /// The editor clears itself on save, so a rejected save gives the text back.
+    /// </summary>
+    private void GiveTextBack(Entity<PaperComponent> paper, EntityUid actor, string text)
+    {
         if (paper.Comp.Writers.Contains(actor))
             SendView(paper, actor, text);
-
-        return false;
     }
 
     public override string SaveEdit(Entity<PaperComponent> paper, EntityUid actor, string text)
     {
         var state = EnsureComp<PaperLanguageStateComponent>(paper);
 
-        var language = state.WritingLanguages.TryGetValue(actor, out var selected) ? selected : (ProtoId<LanguagePrototype>?) null;
+        // CanSave already merged it, unless something else changed in between
+        var result = _pendingMerge is { } pending && pending.Paper == paper.Owner && pending.Actor == actor && ReferenceEquals(pending.Text, text)
+            ? pending.Result
+            : MergeEdit(paper, state, actor, text);
 
-        var result = MergeEdit(paper, state, actor, text, language);
+        _pendingMerge = null;
+        state.HiddenSections.Remove(actor);
         EnsureComp<PaperSaveCooldownComponent>(actor).NextSave = _timing.CurTime + paper.Comp.SaveDelay;
 
         if (result.ConvertedFrom.Count > 0 && result.ConvertedTo is { } convertedTo)

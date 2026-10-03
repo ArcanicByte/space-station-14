@@ -56,6 +56,9 @@ public sealed partial class PaperBoundUserInterface
 
         _hasText = true;
         _window.View = view.View;
+        if (view.HiddenLength is { } hidden)
+            _window.HiddenLength = hidden;
+
         _window.Populate(view.State);
         _window.ResyncLanguageTracking();
         _window.UpdateLanguageBar(view.WritableLanguages, view.DefaultLanguage, view.State.Mode == PaperAction.Write);
