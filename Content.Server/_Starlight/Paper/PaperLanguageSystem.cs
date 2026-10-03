@@ -117,9 +117,7 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
     {
         var state = EnsureComp<PaperLanguageStateComponent>(paper);
 
-        ProtoId<LanguagePrototype>? language = null;
-        if (state.WritingLanguages.TryGetValue(actor, out var selected))
-            language = selected;
+        var language = state.WritingLanguages.TryGetValue(actor, out var selected) ? selected : (ProtoId<LanguagePrototype>?) null;
 
         var result = MergeEdit(paper, state, actor, text, language);
         EnsureComp<PaperSaveCooldownComponent>(actor).NextSave = _timing.CurTime + paper.Comp.SaveDelay;
