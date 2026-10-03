@@ -30,6 +30,9 @@ public sealed partial class PaperLanguageSystem
     private void OnFormFill(Entity<PaperComponent> paper, ref PaperFormFillMessage args)
     {
         var actor = args.Actor;
+        if (args.Text.Length > paper.Comp.ContentSize)
+            return;
+
         var answer = CleanAnswer(args.Text);
         if (answer.Length == 0)
             return;
@@ -39,6 +42,9 @@ public sealed partial class PaperLanguageSystem
             _popup.PopupEntity(Loc.GetString("paper-save-cooldown"), actor, actor);
             return;
         }
+
+        // Started even if the fill fails, so failed fills can't be spammed
+        StartCooldown(paper, actor);
 
         var attempt = new PaperWriteAttemptEvent(paper.Owner, actor);
         RaiseLocalEvent(actor, ref attempt);
@@ -77,7 +83,6 @@ public sealed partial class PaperLanguageSystem
             return;
         }
 
-        EnsureComp<PaperSaveCooldownComponent>(actor).NextSave = _timing.CurTime + paper.Comp.SaveDelay;
         _paper.SetContent(paper, filled);
         _meta.SetEntityDescription(paper, "");
         _audio.PlayPvs(paper.Comp.Sound, paper);

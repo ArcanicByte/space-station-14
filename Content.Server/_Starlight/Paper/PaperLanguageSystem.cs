@@ -144,10 +144,15 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
             return false;
         }
 
+        // Upstream skips text over the limit itself, so don't merge it
+        if (text.Length > paper.Comp.ContentSize)
+            return true;
+
         // Locked text comes back in full, which can be longer than what the player sent. Shrinking is still fine
         var result = MergeEdit(paper, EnsureComp<PaperLanguageStateComponent>(paper), actor, text);
         if (result.Content.Length > paper.Comp.ContentSize && result.Content.Length > paper.Comp.Content.Length)
         {
+            StartCooldown(paper, actor);
             _popup.PopupEntity(Loc.GetString("paper-full"), actor, actor);
             GiveTextBack(paper, actor, text);
             return false;
@@ -156,6 +161,9 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
         _pendingMerge = (paper.Owner, actor, text, result);
         return true;
     }
+
+    private void StartCooldown(Entity<PaperComponent> paper, EntityUid actor) =>
+        EnsureComp<PaperSaveCooldownComponent>(actor).NextSave = _timing.CurTime + paper.Comp.SaveDelay;
 
     /// <summary>
     /// The editor clears itself on save, so a rejected save gives the text back.
@@ -177,7 +185,7 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
 
         _pendingMerge = null;
         state.HiddenSections.Remove(actor);
-        EnsureComp<PaperSaveCooldownComponent>(actor).NextSave = _timing.CurTime + paper.Comp.SaveDelay;
+        StartCooldown(paper, actor);
 
         if (result.ConvertedFrom.Count > 0 && result.ConvertedTo is { } convertedTo)
         {
