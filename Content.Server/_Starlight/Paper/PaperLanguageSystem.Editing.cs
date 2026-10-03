@@ -18,7 +18,7 @@ public sealed partial class PaperLanguageSystem
     /// <summary>
     /// Marks a [check] tag can be filled in with.
     /// </summary>
-    private static readonly string[] CheckMarks = ["☐", "✔", "✖"];
+    private static readonly char[] _checkMarks = ['☐', '✔', '✖'];
 
     private const string CheckTag = "[check]";
 
@@ -139,26 +139,6 @@ public sealed partial class PaperLanguageSystem
         return (original.Language, ApplyFills(original.Original, fills));
     }
 
-    private static Regex? BuildFillPattern(string text)
-    {
-        var pattern = new StringBuilder("^");
-        var position = 0;
-        foreach (Match tag in _checkTagRegex.Matches(text))
-        {
-            pattern.Append(Regex.Escape(text[position..tag.Index]));
-            pattern.Append($@"(\[check\]|[{string.Concat(CheckMarks)}])");
-            position = tag.Index + tag.Length;
-        }
-
-        if (position == 0)
-            return null;
-
-        pattern.Append(Regex.Escape(text[position..]));
-        pattern.Append('$');
-
-        return new Regex(pattern.ToString());
-    }
-
     /// <summary>
     /// Whether the text is unchanged apart from ticked check boxes.
     /// </summary>
@@ -169,18 +149,36 @@ public sealed partial class PaperLanguageSystem
         if (rendered == submitted)
             return true;
 
-        if (BuildFillPattern(rendered) is not { } pattern)
-            return false;
-
-        var match = pattern.Match(submitted);
-        if (!match.Success)
-            return false;
-
-        for (var i = 1; i < match.Groups.Count; i++)
+        // Walk both texts together. Each [check] may come back unticked or as one mark, everything else must match
+        var s = 0;
+        for (var r = 0; r < rendered.Length;)
         {
-            var value = match.Groups[i].Value;
-            fills.Add(value == CheckTag ? null : value);
+            if (string.CompareOrdinal(rendered, r, CheckTag, 0, CheckTag.Length) == 0)
+            {
+                r += CheckTag.Length;
+                if (string.CompareOrdinal(submitted, s, CheckTag, 0, CheckTag.Length) == 0)
+                {
+                    fills.Add(null);
+                    s += CheckTag.Length;
+                }
+                else if (s < submitted.Length && Array.IndexOf(_checkMarks, submitted[s]) != -1)
+                {
+                    fills.Add(submitted[s++].ToString());
+                }
+                else
+                {
+                    return false;
+                }
+
+                continue;
+            }
+
+            if (s >= submitted.Length || rendered[r++] != submitted[s++])
+                return false;
         }
+
+        if (s != submitted.Length)
+            return false;
 
         Logger.GetSawmill("paper.lang").Info($"TryMatchFills took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
         return true;
