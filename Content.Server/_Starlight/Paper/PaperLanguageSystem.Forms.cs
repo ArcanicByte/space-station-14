@@ -90,6 +90,7 @@ public sealed partial class PaperLanguageSystem
     /// </summary>
     public override string? FillTag(Entity<PaperComponent> paper, EntityUid actor, string tag, int index, string text)
     {
+        var timer = Stopwatch.GetTimestamp();
         if (TryComp<PaperSaveCooldownComponent>(actor, out var cooldown) && _timing.CurTime < cooldown.NextSave)
         {
             _popup.PopupEntity(Loc.GetString("paper-save-cooldown"), actor, actor);
@@ -113,6 +114,7 @@ public sealed partial class PaperLanguageSystem
             return null;
         }
 
+        Logger.GetSawmill("paper.lang").Info($"FillTag took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
         return filled;
     }
 
