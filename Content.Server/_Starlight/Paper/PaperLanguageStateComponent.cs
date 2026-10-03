@@ -25,7 +25,7 @@ public sealed partial class PaperLanguageStateComponent : Component
     public Dictionary<EntityUid, PaperSentView> SentViews = [];
 
     /// <summary>
-    /// Each player's latest view numbers and the text they were built from, so form fills land in the right form.
+    /// Numbered views sent to each player and the text each showed, so form fills land in the right form.
     /// </summary>
     [ViewVariables]
     public Dictionary<EntityUid, List<(int View, string? Content)>> ViewHistory = [];

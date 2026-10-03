@@ -32,15 +32,13 @@ public sealed partial class PaperWindow
     /// </summary>
     public int HiddenLength
     {
-        get => _hiddenLength;
+        get;
         set
         {
-            _hiddenLength = value;
+            field = value;
             UpdateFillState();
         }
     }
-
-    private int _hiddenLength;
 
     /// <summary>
     /// Language new text is written in.

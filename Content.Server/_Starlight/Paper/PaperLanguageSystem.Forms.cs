@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Content.Server.Administration.Logs;
@@ -92,16 +93,25 @@ public sealed partial class PaperLanguageSystem
             $"{ToPrettyString(actor):player} has filled in a form on {ToPrettyString(paper):entity} in {writing}: {answer}");
     }
 
-    private static string CleanAnswer(string text)
-    {
-        var builder = new StringBuilder(text.Length);
-        foreach (var ch in text)
-        {
-            if (Array.IndexOf(_answerBannedChars, ch) == -1)
-                builder.Append(ch);
-        }
+    private static string CleanAnswer(string text) => string.Concat(text.Where(ch => !_answerBannedChars.Contains(ch))).Trim();
 
-        return builder.ToString().Trim();
+    /// <summary>
+    /// Numbers a view sent to a player and remembers the text it showed.
+    /// </summary>
+    /// <param name="content">The paper text the view was built from, or null if it showed other text.</param>
+    private static int AddToHistory(PaperLanguageStateComponent state, EntityUid actor, string? content)
+    {
+        if (!state.ViewHistory.TryGetValue(actor, out var history))
+            state.ViewHistory[actor] = history = [];
+
+        var number = history.Count > 0 ? history[^1].View + 1 : 1;
+        history.Add((number, content));
+
+        // The fill dialog can stay open over a few saves, so keep some old views
+        if (history.Count > MaxViewHistory)
+            history.RemoveAt(0);
+
+        return number;
     }
 
     /// <summary>
@@ -109,17 +119,9 @@ public sealed partial class PaperLanguageSystem
     /// </summary>
     private static int? FindForm(PaperLanguageStateComponent state, EntityUid actor, string content, int view, int index)
     {
-        if (!state.ViewHistory.TryGetValue(actor, out var history))
-            return null;
-
-        string? seen = null;
-        foreach (var entry in history)
-        {
-            if (entry.View == view)
-                seen = entry.Content;
-        }
-
-        if (seen == null || FindNthForm(seen, index) is not { } form)
+        if (!state.ViewHistory.TryGetValue(actor, out var history)
+            || history.Find(entry => entry.View == view).Content is not { } seen
+            || FindNthForm(seen, index) is not { } form)
             return null;
 
         // Text that's the same at the start and end of both versions. A form there is the same form

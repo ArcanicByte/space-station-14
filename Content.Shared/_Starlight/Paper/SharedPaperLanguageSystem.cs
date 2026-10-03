@@ -24,8 +24,6 @@ public abstract partial class SharedPaperLanguageSystem : EntitySystem
     // [lang="X"], [lang="X" id=N] and [/lang]
     private static readonly Regex _languageTagRegex = new(@"\[lang=""?(?<lang>[A-Za-z0-9_]+)""?(?:\s+id=(?<id>\d+))?\s*\]|\[/lang\]", RegexOptions.Compiled);
 
-    public bool IsWritable(ProtoId<LanguagePrototype> language) => _prototype.TryIndex(language, out var proto) && proto.Writable;
-
     /// <summary>
     /// A language that no longer exists can't be obfuscated, so just show it.
     /// </summary>
@@ -37,7 +35,10 @@ public abstract partial class SharedPaperLanguageSystem : EntitySystem
     /// <summary>
     /// Writing in a language requires speaking it.
     /// </summary>
-    public bool CanWrite(EntityUid writer, ProtoId<LanguagePrototype> language) => IsWritable(language) && (HasComp<UniversalLanguageSpeakerComponent>(writer) || _language.CanSpeak(writer, language));
+    public bool CanWrite(EntityUid writer, ProtoId<LanguagePrototype> language) =>
+        _prototype.TryIndex(language, out var proto)
+        && proto.Writable
+        && (HasComp<UniversalLanguageSpeakerComponent>(writer) || _language.CanSpeak(writer, language));
 
     public List<ProtoId<LanguagePrototype>> GetWritableLanguages(EntityUid writer)
     {

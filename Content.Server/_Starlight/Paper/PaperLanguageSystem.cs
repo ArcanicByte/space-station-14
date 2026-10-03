@@ -52,38 +52,17 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
         else
             state.SentViews.Remove(actor);
 
-        var uiText = text ?? GetUiView(paper, state, actor, mode == PaperAction.Write);
-        var uiState = new PaperBoundUserInterfaceState(uiText, paper.Comp.StampedBy, mode);
+        var paperText = text == null ? paper.Comp.Content : null;
+        var shown = text ?? GetUiView(paper, state, actor, mode == PaperAction.Write);
 
-        // How much longer the paper is than what they see, mostly markup in locked text
-        int? hiddenLength = text == null ? paper.Comp.Content.Length - uiText.Length : null;
-
+        // Hidden length is mostly markup in locked text, which the editor can't see
         var message = new PaperViewMessage(
-            AddToHistory(state, actor, text == null ? paper.Comp.Content : null),
-            uiState,
+            AddToHistory(state, actor, paperText),
+            new PaperBoundUserInterfaceState(shown, paper.Comp.StampedBy, mode),
             languages,
             view.DefaultLanguage,
-            hiddenLength);
+            paperText?.Length - shown.Length);
         _ui.ServerSendUiMessage(paper.Owner, PaperUiKey.Key, message, actor);
-    }
-
-    /// <summary>
-    /// Numbers a view sent to a player and remembers the text it showed.
-    /// </summary>
-    /// <param name="content">The paper text the view was built from, or null if it showed other text.</param>
-    private static int AddToHistory(PaperLanguageStateComponent state, EntityUid actor, string? content)
-    {
-        if (!state.ViewHistory.TryGetValue(actor, out var history))
-            state.ViewHistory[actor] = history = [];
-
-        var number = history.Count > 0 ? history[^1].View + 1 : 1;
-        history.Add((number, content));
-
-        // The fill dialog can stay open over a few saves, so keep some old views
-        if (history.Count > MaxViewHistory)
-            history.RemoveAt(0);
-
-        return number;
     }
 
     [SubscribeLocalEvent]
@@ -178,7 +157,7 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
     {
         var state = EnsureComp<PaperLanguageStateComponent>(paper);
 
-        // CanSave already merged it, unless something else changed in between
+        // Reuse the merge from CanSave
         var result = _pendingMerge is { } pending && pending.Paper == paper.Owner && pending.Actor == actor && ReferenceEquals(pending.Text, text)
             ? pending.Result
             : MergeEdit(paper, state, actor, text);
