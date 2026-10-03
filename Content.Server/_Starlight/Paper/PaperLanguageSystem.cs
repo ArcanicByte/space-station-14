@@ -119,6 +119,7 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
         state.SentViews.Remove(viewer);
         state.ViewHistory.Remove(viewer);
         state.HiddenSections.Remove(viewer);
+        state.NextHiddenIds.Remove(viewer);
     }
 
     /// <summary>

@@ -100,6 +100,7 @@ public sealed partial class PaperLanguageSystem
             ids.Enqueue(existingId);
         }
 
+        var onPaper = new HashSet<(ProtoId<LanguagePrototype>, string)>();
         var builder = new StringBuilder();
         foreach (var section in GetSections(paper, state))
         {
@@ -112,6 +113,7 @@ public sealed partial class PaperLanguageSystem
             }
 
             var (leading, core, trailing) = SplitWhitespace(section.Text);
+            onPaper.Add((language, core));
             builder.Append(leading);
 
             if (CanWrite(viewer, language))
@@ -124,17 +126,26 @@ public sealed partial class PaperLanguageSystem
             else
             {
                 var rendered = RenderLocked(state, viewer, language, core, editing);
-                var id = GetHiddenSectionId(hidden, existingIds, new HiddenPaperSection(language, core, rendered));
+                var id = GetHiddenSectionId(state, viewer, hidden, existingIds, new HiddenPaperSection(language, core, rendered));
                 AppendTagged(builder, language, id, rendered);
             }
 
             builder.Append(trailing);
         }
 
+        // Sections no longer on the paper can't be restored anyway
+        foreach (var (id, section) in hidden)
+        {
+            if (!onPaper.Contains((section.Language, section.Original)))
+                hidden.Remove(id);
+        }
+
         return builder.ToString();
     }
 
     private static int GetHiddenSectionId(
+        PaperLanguageStateComponent state,
+        EntityUid viewer,
         Dictionary<int, HiddenPaperSection> hidden,
         Dictionary<HiddenPaperSection, Queue<int>> existingIds,
         HiddenPaperSection section)
@@ -142,8 +153,9 @@ public sealed partial class PaperLanguageSystem
         if (existingIds.TryGetValue(section, out var ids) && ids.TryDequeue(out var existingId))
             return existingId;
 
-        // Ids are only ever added, so they run from 1 to the count
-        var id = hidden.Count + 1;
+        // Removed ids aren't reused, so an old tag can't match a different section
+        var id = state.NextHiddenIds.GetValueOrDefault(viewer) + 1;
+        state.NextHiddenIds[viewer] = id;
         hidden[id] = section;
         return id;
     }

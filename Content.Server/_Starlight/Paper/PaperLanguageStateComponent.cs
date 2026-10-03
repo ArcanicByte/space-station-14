@@ -37,6 +37,12 @@ public sealed partial class PaperLanguageStateComponent : Component
     public Dictionary<EntityUid, Dictionary<int, HiddenPaperSection>> HiddenSections = [];
 
     /// <summary>
+    /// Last hidden section id given to each player.
+    /// </summary>
+    [ViewVariables]
+    public Dictionary<EntityUid, int> NextHiddenIds = [];
+
+    /// <summary>
     /// Scrambled text per section, shared by everyone who can't read it.
     /// </summary>
     [ViewVariables]
