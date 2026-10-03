@@ -85,6 +85,8 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
         Logger.GetSawmill("paper.lang").Info($"OnLanguagesUpdate took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
     }
 
+    // Opening by hand is predicted, so the client's view request can arrive before the server opens the UI and get dropped.
+    // This covers that. The request covers opens started by the server, where this send can arrive before the client's window exists
     [SubscribeLocalEvent]
     private void OnUIOpened(Entity<PaperComponent> paper, ref BoundUIOpenedEvent args)
     {

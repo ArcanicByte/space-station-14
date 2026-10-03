@@ -30,6 +30,8 @@ public sealed partial class PaperBoundUserInterface
             _window.UpdateLanguageBar(languages, paperLanguage.GetDefaultWritingLanguage(player, languages), writing);
         }
 
+        // The server also sends a view when the UI opens, but that can arrive before this window exists.
+        // This request can arrive too early instead, so both are needed. See OnUIOpened on the server
         SendMessage(new PaperViewRequestMessage());
         Logger.GetSawmill("paper.lang").Info($"OpenLanguage took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
     }
