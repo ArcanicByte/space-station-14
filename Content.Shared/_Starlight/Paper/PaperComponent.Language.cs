@@ -33,13 +33,34 @@ public sealed partial class PaperComponent
     /// </summary>
     [Serializable, NetSerializable]
     public sealed class PaperViewMessage(
+        int view,
         PaperBoundUserInterfaceState state,
         List<ProtoId<LanguagePrototype>> writableLanguages,
         ProtoId<LanguagePrototype>? defaultLanguage) : BoundUserInterfaceMessage
     {
+        /// <summary>
+        /// Counts up with each view sent to this player, so form fills can say which one they saw.
+        /// </summary>
+        public readonly int View = view;
+
         public readonly PaperBoundUserInterfaceState State = state;
         public readonly List<ProtoId<LanguagePrototype>> WritableLanguages = writableLanguages;
         public readonly ProtoId<LanguagePrototype>? DefaultLanguage = defaultLanguage;
+    }
+
+    /// <summary>
+    /// Fills in a [form], written in the player's selected language.
+    /// </summary>
+    [Serializable, NetSerializable]
+    public sealed class PaperFormFillMessage(int view, int index, string text) : BoundUserInterfaceMessage
+    {
+        /// <summary>
+        /// The view the form was clicked in.
+        /// </summary>
+        public readonly int View = view;
+
+        public readonly int Index = index;
+        public readonly string Text = text;
     }
 
     /// <summary>

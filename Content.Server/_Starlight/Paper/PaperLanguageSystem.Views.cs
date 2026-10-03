@@ -20,8 +20,8 @@ public sealed partial class PaperLanguageSystem
     // Any markup tag, removed before turning hidden text into placeholders
     private static readonly Regex _markupTagRegex = new(@"\[[^\[\]]*\]", RegexOptions.Compiled);
 
-    // Markup tags and check marks, kept as is when obfuscating
-    private static readonly Regex _preservedRegex = new(@"\[[^\[\]]*\]|[☐✔✖]", RegexOptions.Compiled);
+    // Markup tags and check marks, kept as is when obfuscating. Escaped tags keep their backslash so they stay escaped
+    private static readonly Regex _preservedRegex = new(@"\\?\[[^\[\]]*\]|[☐✔✖]", RegexOptions.Compiled);
 
     protected override List<PaperSection> GetSections(Entity<PaperComponent> paper) =>
         TryComp<PaperLanguageStateComponent>(paper, out var state) ? GetSections(paper, state) : ParseSections(paper.Comp.Content);

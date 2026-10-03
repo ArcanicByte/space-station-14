@@ -400,6 +400,8 @@ namespace Content.Client.Paper.UI
         /// <param name="formIndex">Zero-based index of which [form] tag to replace</param>
         public void OpenFormDialog(int formIndex)
         {
+            var view = View; // Starlight-edit
+
             // Find and highlight the form button
             var formButton = FindFormButton(formIndex);
             if (formButton != null)
@@ -421,8 +423,7 @@ namespace Content.Client.Paper.UI
             {
                 if (!string.IsNullOrEmpty(edit.Text))
                 {
-                    var newText = ReplaceNthFormTag(_currentRawText, formIndex, edit.Text);
-                    OnSaved?.Invoke(newText);
+                    OnFormFilled?.Invoke(view, formIndex, edit.Text); // Starlight-edit
                 }
                 if (formButton != null)
                     formButton.ModulateSelfOverride = null;
@@ -441,8 +442,7 @@ namespace Content.Client.Paper.UI
             {
                 if (!string.IsNullOrEmpty(edit.Text))
                 {
-                    var newText = ReplaceNthFormTag(_currentRawText, formIndex, edit.Text);
-                    OnSaved?.Invoke(newText);
+                    OnFormFilled?.Invoke(view, formIndex, edit.Text); // Starlight-edit
                 }
                 popup.Close();
             };

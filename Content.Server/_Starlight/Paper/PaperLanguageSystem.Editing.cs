@@ -8,8 +8,8 @@ namespace Content.Server._Starlight.Paper;
 
 public sealed partial class PaperLanguageSystem
 {
-    // Tags filled in through a save, allowed even in sections the player can't read
-    private static readonly Regex _fillableTagRegex = new(@"\[form\]|\[check\]", RegexOptions.Compiled);
+    // Check boxes can be ticked through a save, even in sections the player can't read. Forms have their own message
+    private static readonly Regex _checkTagRegex = new(@"\[check\]", RegexOptions.Compiled);
 
     // Buttons rather than text, so they don't belong to any language
     private static readonly Regex _interactiveTagRegex = new(@"\[form\]|\[check\]|\[signature\]|\[datetime\]", RegexOptions.Compiled);
@@ -19,7 +19,6 @@ public sealed partial class PaperLanguageSystem
     /// </summary>
     private static readonly string[] CheckMarks = ["☐", "✔", "✖"];
 
-    private const string FormTag = "[form]";
     private const string CheckTag = "[check]";
 
     private PaperMergeResult MergeEdit(
@@ -144,12 +143,10 @@ public sealed partial class PaperLanguageSystem
     {
         var pattern = new StringBuilder("^");
         var position = 0;
-        foreach (Match tag in _fillableTagRegex.Matches(text))
+        foreach (Match tag in _checkTagRegex.Matches(text))
         {
             pattern.Append(Regex.Escape(text[position..tag.Index]));
-            pattern.Append(tag.Value == FormTag
-                ? @"(\[form\]|[^\[\]\n]*)"
-                : $@"(\[check\]|[{string.Concat(CheckMarks)}])");
+            pattern.Append($@"(\[check\]|[{string.Concat(CheckMarks)}])");
             position = tag.Index + tag.Length;
         }
 
@@ -163,7 +160,7 @@ public sealed partial class PaperLanguageSystem
     }
 
     /// <summary>
-    /// Whether the text is unchanged apart from filled in forms and check boxes.
+    /// Whether the text is unchanged apart from ticked check boxes.
     /// </summary>
     private static bool TryMatchFills(string rendered, string submitted, out List<string?> fills)
     {
@@ -181,7 +178,7 @@ public sealed partial class PaperLanguageSystem
         for (var i = 1; i < match.Groups.Count; i++)
         {
             var value = match.Groups[i].Value;
-            fills.Add(value is FormTag or CheckTag || value.Trim().Length == 0 ? null : value.Trim());
+            fills.Add(value == CheckTag ? null : value);
         }
 
         return true;
@@ -193,7 +190,7 @@ public sealed partial class PaperLanguageSystem
         var position = 0;
         var index = 0;
 
-        foreach (Match tag in _fillableTagRegex.Matches(original))
+        foreach (Match tag in _checkTagRegex.Matches(original))
         {
             builder.Append(original[position..tag.Index]);
             builder.Append(index < fills.Count && fills[index] is { } fill ? fill : tag.Value);

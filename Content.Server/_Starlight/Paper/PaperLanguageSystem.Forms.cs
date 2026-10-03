@@ -1,0 +1,181 @@
+using System.Text;
+using System.Text.RegularExpressions;
+using Content.Server.Administration.Logs;
+using Content.Shared._Starlight.Language;
+using Content.Shared.Database;
+using Content.Shared.Paper;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Prototypes;
+using static Content.Shared.Paper.PaperComponent;
+
+namespace Content.Server._Starlight.Paper;
+
+public sealed partial class PaperLanguageSystem
+{
+    [Dependency] private IAdminLogManager _adminLogger = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private MetaDataSystem _meta = default!;
+    [Dependency] private PaperSystem _paper = default!;
+
+    private const int MaxViewHistory = 16;
+    private const string FormTag = "[form]";
+
+    // Escaped forms aren't buttons, so they aren't counted
+    private static readonly Regex _formTagRegex = new(@"(?<!\\)\[form\]", RegexOptions.Compiled);
+
+    // Removed from answers so they can't add markup or break the tags around them
+    private static readonly char[] _answerBannedChars = ['[', ']', '\\', '\n', '\r'];
+
+    [SubscribeLocalEvent]
+    private void OnFormFill(Entity<PaperComponent> paper, ref PaperFormFillMessage args)
+    {
+        var actor = args.Actor;
+        var answer = CleanAnswer(args.Text);
+        if (answer.Length == 0)
+            return;
+
+        if (TryComp<PaperSaveCooldownComponent>(actor, out var cooldown) && _timing.CurTime < cooldown.NextSave)
+        {
+            _popup.PopupEntity(Loc.GetString("paper-save-cooldown"), actor, actor);
+            return;
+        }
+
+        var attempt = new PaperWriteAttemptEvent(paper.Owner, actor);
+        RaiseLocalEvent(actor, ref attempt);
+        RaiseLocalEvent(paper.Owner, ref attempt);
+        if (attempt.Cancelled)
+        {
+            if (attempt.FailReason is { } reason)
+                _popup.PopupEntity(reason, actor, actor);
+
+            return;
+        }
+
+        var state = EnsureComp<PaperLanguageStateComponent>(paper);
+        var language = state.WritingLanguages.TryGetValue(actor, out var selected) && CanWrite(actor, selected)
+            ? selected
+            : GetDefaultWritingLanguage(actor);
+
+        if (language is not { } writing)
+        {
+            _popup.PopupEntity(Loc.GetString("paper-form-no-language"), actor, actor);
+            return;
+        }
+
+        var content = paper.Comp.Content;
+        if (FindForm(state, actor, content, args.View, args.Index) is not { } position)
+        {
+            _popup.PopupEntity(Loc.GetString("paper-form-changed"), actor, actor);
+            SendView(paper, actor, force: true);
+            return;
+        }
+
+        var filled = content[..position] + TagAnswer(content, position, writing, answer) + content[(position + FormTag.Length)..];
+        if (filled.Length > paper.Comp.ContentSize)
+        {
+            _popup.PopupEntity(Loc.GetString("paper-form-full"), actor, actor);
+            return;
+        }
+
+        EnsureComp<PaperSaveCooldownComponent>(actor).NextSave = _timing.CurTime + paper.Comp.SaveDelay;
+        _paper.SetContent(paper, filled);
+        _meta.SetEntityDescription(paper, "");
+        _audio.PlayPvs(paper.Comp.Sound, paper);
+
+        _adminLogger.Add(LogType.Chat,
+            LogImpact.Low,
+            $"{ToPrettyString(actor):player} has filled in a form on {ToPrettyString(paper):entity} in {writing}: {answer}");
+    }
+
+    private static string CleanAnswer(string text)
+    {
+        var builder = new StringBuilder(text.Length);
+        foreach (var ch in text)
+        {
+            if (Array.IndexOf(_answerBannedChars, ch) == -1)
+                builder.Append(ch);
+        }
+
+        return builder.ToString().Trim();
+    }
+
+    /// <summary>
+    /// Where a form the player clicked is in the current text, or null if that form changed since they saw it.
+    /// </summary>
+    private static int? FindForm(PaperLanguageStateComponent state, EntityUid actor, string content, int view, int index)
+    {
+        if (!state.ViewHistory.TryGetValue(actor, out var history))
+            return null;
+
+        string? seen = null;
+        foreach (var entry in history)
+        {
+            if (entry.View == view)
+                seen = entry.Content;
+        }
+
+        if (seen == null || FindNthForm(seen, index) is not { } form)
+            return null;
+
+        // Text that's the same at the start and end of both versions. A form there is the same form
+        var max = Math.Min(seen.Length, content.Length);
+        var start = 0;
+        while (start < max && seen[start] == content[start])
+            start++;
+
+        var end = 0;
+        while (end < max - start && seen[^(end + 1)] == content[^(end + 1)])
+            end++;
+
+        int position;
+        if (form + FormTag.Length <= start)
+            position = form;
+        else if (form >= seen.Length - end)
+            position = form + content.Length - seen.Length;
+        else
+            return null;
+
+        // The text before it may have changed, like a new backslash escaping it
+        var match = _formTagRegex.Match(content, position);
+        return match.Success && match.Index == position ? position : null;
+    }
+
+    private static int? FindNthForm(string text, int index)
+    {
+        if (index < 0)
+            return null;
+
+        var count = 0;
+        foreach (Match match in _formTagRegex.Matches(text))
+        {
+            if (count++ == index)
+                return match.Index;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// The answer tagged with its language. If the form is in a section of another language, that section is closed around it.
+    /// </summary>
+    private static string TagAnswer(string content, int position, ProtoId<LanguagePrototype> language, string answer)
+    {
+        var section = GetSectionAt(content, position).Language ?? DefaultLanguage;
+        if (section == language)
+            return answer;
+
+        var builder = new StringBuilder();
+        if (section != DefaultLanguage)
+            builder.Append(ClosingTag);
+
+        if (language == DefaultLanguage)
+            builder.Append(answer);
+        else
+            AppendTagged(builder, language, null, answer);
+
+        if (section != DefaultLanguage)
+            builder.Append(OpeningTag(section));
+
+        return builder.ToString();
+    }
+}

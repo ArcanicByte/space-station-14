@@ -54,8 +54,27 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
             paper.Comp.StampedBy,
             mode);
 
-        var message = new PaperViewMessage(uiState, languages, view.DefaultLanguage);
+        var message = new PaperViewMessage(AddToHistory(state, actor, text == null ? paper.Comp.Content : null), uiState, languages, view.DefaultLanguage);
         _ui.ServerSendUiMessage(paper.Owner, PaperUiKey.Key, message, actor);
+    }
+
+    /// <summary>
+    /// Numbers a view sent to a player and remembers the text it showed.
+    /// </summary>
+    /// <param name="content">The paper text the view was built from, or null if it showed other text.</param>
+    private static int AddToHistory(PaperLanguageStateComponent state, EntityUid actor, string? content)
+    {
+        if (!state.ViewHistory.TryGetValue(actor, out var history))
+            state.ViewHistory[actor] = history = [];
+
+        var number = history.Count > 0 ? history[^1].View + 1 : 1;
+        history.Add((number, content));
+
+        // The fill dialog can stay open over a few saves, so keep some old views
+        if (history.Count > MaxViewHistory)
+            history.RemoveAt(0);
+
+        return number;
     }
 
     [SubscribeLocalEvent]
@@ -89,6 +108,7 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
 
         state.WritingLanguages.Remove(viewer);
         state.SentViews.Remove(viewer);
+        state.ViewHistory.Remove(viewer);
         state.HiddenSections.Remove(viewer);
     }
 

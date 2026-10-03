@@ -14,6 +14,7 @@ public sealed partial class PaperBoundUserInterface
 
         _window.InitializeLanguageBar();
         _window.OnLanguageSelected += language => SendMessage(new PaperSelectLanguageMessage(language));
+        _window.OnFormFilled += (view, index, text) => SendMessage(new PaperFormFillMessage(view, index, text));
 
         // Show a blank paper until the server sends the text
         if (EntMan.TryGetComponent<PaperComponent>(Owner, out var paper) && PlayerManager.LocalEntity is { } player)
@@ -54,6 +55,7 @@ public sealed partial class PaperBoundUserInterface
             return;
 
         _hasText = true;
+        _window.View = view.View;
         _window.Populate(view.State);
         _window.ResyncLanguageTracking();
         _window.UpdateLanguageBar(view.WritableLanguages, view.DefaultLanguage, view.State.Mode == PaperAction.Write);

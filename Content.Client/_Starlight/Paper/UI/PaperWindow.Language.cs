@@ -18,6 +18,16 @@ public sealed partial class PaperWindow
     public event Action<ProtoId<LanguagePrototype>>? OnLanguageSelected;
 
     /// <summary>
+    /// A [form] was filled in, with the view it was clicked in, its index and the answer.
+    /// </summary>
+    public event Action<int, int, string>? OnFormFilled;
+
+    /// <summary>
+    /// Number of the server view shown, so form fills can say which one they were clicked in.
+    /// </summary>
+    public int View { get; set; }
+
+    /// <summary>
     /// Language new text is written in.
     /// </summary>
     public ProtoId<LanguagePrototype>? SelectedLanguage { get; private set; }
@@ -67,7 +77,8 @@ public sealed partial class PaperWindow
     /// </summary>
     public void UpdateLanguageBar(List<ProtoId<LanguagePrototype>> languages, ProtoId<LanguagePrototype>? defaultLanguage, bool isEditing)
     {
-        LanguageBar.Visible = isEditing;
+        // Forms are answered in the selected language, so readers need it too
+        LanguageBar.Visible = isEditing || _currentRawText.Contains("[form]", StringComparison.Ordinal);
 
         if (!_languageOptions.SequenceEqual(languages))
         {
@@ -86,7 +97,7 @@ public sealed partial class PaperWindow
 
         var hasLanguages = _languageOptions.Count > 0;
         LanguageSelector.Visible = hasLanguages;
-        TranslateButton.Visible = hasLanguages;
+        TranslateButton.Visible = hasLanguages && isEditing;
         NoLanguageLabel.Visible = !hasLanguages;
 
         // Without a language, saving only closes the editor
