@@ -69,6 +69,13 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
     }
 
     [SubscribeLocalEvent]
+    private void OnUIOpened(Entity<PaperComponent> paper, ref BoundUIOpenedEvent args)
+    {
+        if (args.UiKey.Equals(PaperUiKey.Key))
+            SendView(paper, args.Actor);
+    }
+
+    [SubscribeLocalEvent]
     private void OnViewRequest(Entity<PaperComponent> paper, ref PaperViewRequestMessage args) => SendView(paper, args.Actor, force: true);
 
     [SubscribeLocalEvent]
