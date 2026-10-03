@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using Content.Server.Administration.Logs;
 using Content.Shared._Starlight.Language;
 using Content.Shared.Database;
@@ -21,9 +20,6 @@ public sealed partial class PaperLanguageSystem
 
     private const int MaxViewHistory = 16;
     private const string FormTag = "[form]";
-
-    // Escaped forms aren't buttons, so they aren't counted
-    private static readonly Regex _formTagRegex = new(@"(?<!\\)\[form\]", RegexOptions.Compiled);
 
     // Removed from answers so they can't add markup or break the tags around them
     private static readonly char[] _answerBannedChars = ['[', ']', '\\', '\n', '\r'];
@@ -60,17 +56,10 @@ public sealed partial class PaperLanguageSystem
             return;
         }
 
-        var state = EnsureComp<PaperLanguageStateComponent>(paper);
-        var language = state.WritingLanguages.TryGetValue(actor, out var selected) && CanWrite(actor, selected)
-            ? selected
-            : GetDefaultWritingLanguage(actor);
-
-        if (language is not { } writing)
-        {
-            _popup.PopupEntity(Loc.GetString("paper-form-no-language"), actor, actor);
+        if (GetFillLanguage(paper, actor) is not { } writing)
             return;
-        }
 
+        var state = EnsureComp<PaperLanguageStateComponent>(paper);
         var content = paper.Comp.Content;
         if (FindForm(state, actor, content, args.View, args.Index) is not { } position)
         {
@@ -94,6 +83,53 @@ public sealed partial class PaperLanguageSystem
             LogImpact.Low,
             $"{ToPrettyString(actor):player} has filled in a form on {ToPrettyString(paper):entity} in {writing}: {answer}");
         Logger.GetSawmill("paper.lang").Info($"OnFormFill took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
+    }
+
+    /// <summary>
+    /// Fills a [signature] or [datetime] in the player's writing language, like a form answer.
+    /// </summary>
+    public override string? FillTag(Entity<PaperComponent> paper, EntityUid actor, string tag, int index, string text)
+    {
+        if (TryComp<PaperSaveCooldownComponent>(actor, out var cooldown) && _timing.CurTime < cooldown.NextSave)
+        {
+            _popup.PopupEntity(Loc.GetString("paper-save-cooldown"), actor, actor);
+            return null;
+        }
+
+        // Started even if the fill fails, so failed fills can't be spammed
+        StartCooldown(paper, actor);
+
+        if (GetFillLanguage(paper, actor) is not { } language)
+            return null;
+
+        var content = paper.Comp.Content;
+        if (FindNthTag(content, tag, index) is not { } position)
+            return null;
+
+        var filled = content[..position] + TagAnswer(content, position, language, CleanAnswer(text)) + content[(position + tag.Length)..];
+        if (filled.Length > paper.Comp.ContentSize)
+        {
+            _popup.PopupEntity(Loc.GetString("paper-full"), actor, actor);
+            return null;
+        }
+
+        return filled;
+    }
+
+    /// <summary>
+    /// The language a player fills things in with. Without one, they get a popup and null.
+    /// </summary>
+    private ProtoId<LanguagePrototype>? GetFillLanguage(Entity<PaperComponent> paper, EntityUid actor)
+    {
+        var state = EnsureComp<PaperLanguageStateComponent>(paper);
+        var language = state.WritingLanguages.TryGetValue(actor, out var selected) && CanWrite(actor, selected)
+            ? selected
+            : GetDefaultWritingLanguage(actor);
+
+        if (language == null)
+            _popup.PopupEntity(Loc.GetString("paper-form-no-language"), actor, actor);
+
+        return language;
     }
 
     private static string CleanAnswer(string text) => string.Concat(text.Where(ch => !_answerBannedChars.Contains(ch))).Trim();
@@ -125,7 +161,7 @@ public sealed partial class PaperLanguageSystem
         var timer = Stopwatch.GetTimestamp();
         if (!state.ViewHistory.TryGetValue(actor, out var history)
             || history.Find(entry => entry.View == view).Content is not { } seen
-            || FindNthForm(seen, index) is not { } form)
+            || FindNthTag(seen, FormTag, index) is not { } form)
             return null;
 
         // Text that's the same at the start and end of both versions. A form there is the same form
@@ -147,25 +183,30 @@ public sealed partial class PaperLanguageSystem
             return null;
 
         // The text before it may have changed, like a new backslash escaping it
-        var match = _formTagRegex.Match(content, position);
         Logger.GetSawmill("paper.lang").Info($"FindForm took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
-        return match.Success && match.Index == position ? position : null;
+        return IsTagAt(content, FormTag, position) ? position : null;
     }
 
-    private static int? FindNthForm(string text, int index)
+    /// <summary>
+    /// Where the Nth tag is. Escaped tags aren't buttons, so they aren't counted.
+    /// </summary>
+    private static int? FindNthTag(string text, string tag, int index)
     {
         if (index < 0)
             return null;
 
         var count = 0;
-        foreach (Match match in _formTagRegex.Matches(text))
+        for (var position = text.IndexOf(tag, StringComparison.Ordinal); position != -1; position = text.IndexOf(tag, position + tag.Length, StringComparison.Ordinal))
         {
-            if (count++ == index)
-                return match.Index;
+            if (IsTagAt(text, tag, position) && count++ == index)
+                return position;
         }
 
         return null;
     }
+
+    private static bool IsTagAt(string text, string tag, int position) =>
+        string.CompareOrdinal(text, position, tag, 0, tag.Length) == 0 && (position == 0 || text[position - 1] != '\\');
 
     /// <summary>
     /// The answer tagged with its language. If the form is in a section of another language, that section is closed around it.

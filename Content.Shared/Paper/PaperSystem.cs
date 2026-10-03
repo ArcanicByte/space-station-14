@@ -469,7 +469,9 @@ public sealed partial class PaperSystem : EntitySystem
     private void OnSignatureRequest(Entity<PaperComponent> entity, ref PaperSignatureRequestMessage args)
     {
         var signature = GetPlayerSignature(args.Actor);
-        var newText = ReplaceNthSignatureTag(entity.Comp.Content, args.SignatureIndex, signature);
+        if (_paperLanguage.FillTag(entity, args.Actor, "[signature]", args.SignatureIndex, signature) is not { } newText)
+            return;
+
         SetContent(entity, newText);
 
         _adminLogger.Add(LogType.Chat, LogImpact.Low,
@@ -484,7 +486,9 @@ public sealed partial class PaperSystem : EntitySystem
         // shift time is more helpful than the date for rounds, date is still included for the flavor
         var formatted = $"{date} // {(int)shiftTime.TotalHours:D2}:{shiftTime.Minutes:D2} Shift Time";
 
-        var newText = ReplaceNthDateTimeTag(entity.Comp.Content, args.DateTimeIndex, formatted);
+        if (_paperLanguage.FillTag(entity, args.Actor, "[datetime]", args.DateTimeIndex, formatted) is not { } newText)
+            return;
+
         SetContent(entity, newText);
     }
 

@@ -48,7 +48,7 @@ public sealed partial class PaperWindow
 
     private readonly List<ProtoId<LanguagePrototype>> _languageOptions = [];
     private string? _saveButtonText;
-    private static readonly TimeSpan _saveCooldown = TimeSpan.FromSeconds(0.25);
+    private static readonly TimeSpan _saveCooldown = TimeSpan.FromSeconds(0.5);
     private static TimeSpan s_saveCooldownEnd;
     // OnTextChanged fires before the cursor moves, so edits are handled next frame
     private string _trackedText = string.Empty;
@@ -92,8 +92,11 @@ public sealed partial class PaperWindow
     public void UpdateLanguageBar(List<ProtoId<LanguagePrototype>> languages, ProtoId<LanguagePrototype>? defaultLanguage, bool isEditing)
     {
         var timer = Stopwatch.GetTimestamp();
-        // Forms are answered in the selected language, so readers need it too
-        LanguageBar.Visible = isEditing || _currentRawText.Contains("[form]", StringComparison.Ordinal);
+        // Forms, signatures and dates are filled in the selected language, so readers need it too
+        LanguageBar.Visible = isEditing
+            || _currentRawText.Contains("[form]", StringComparison.Ordinal)
+            || _currentRawText.Contains("[signature]", StringComparison.Ordinal)
+            || _currentRawText.Contains("[datetime]", StringComparison.Ordinal);
 
         if (!_languageOptions.SequenceEqual(languages))
         {

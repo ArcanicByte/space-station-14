@@ -106,6 +106,11 @@ public abstract partial class SharedPaperLanguageSystem : EntitySystem
     public virtual string SaveEdit(Entity<PaperComponent> paper, EntityUid actor, string text) => text;
 
     /// <summary>
+    /// Paper content with the Nth <paramref name="tag"/> filled in, or null if the player can't fill it.
+    /// </summary>
+    public virtual string? FillTag(Entity<PaperComponent> paper, EntityUid actor, string tag, int index, string text) => null;
+
+    /// <summary>
     /// Paper text with language tags, obfuscated where the viewer can't read it.
     /// </summary>
     public virtual string GetStyledView(Entity<PaperComponent> paper, EntityUid viewer) => string.Empty;

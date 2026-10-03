@@ -26,7 +26,7 @@ public sealed partial class PaperComponent
     public Dictionary<EntityUid, TimeSpan> ReopenTimes = [];
 
     [DataField]
-    public TimeSpan SaveDelay = TimeSpan.FromSeconds(0.1);
+    public TimeSpan SaveDelay = TimeSpan.FromSeconds(0.5);
 
     /// <summary>
     /// A player's own view of the paper.
