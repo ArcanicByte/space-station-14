@@ -26,7 +26,7 @@ public sealed partial class PaperWindow
     private string? _saveButtonText;
     private static readonly TimeSpan _saveCooldown = TimeSpan.FromSeconds(0.25);
     private static TimeSpan s_saveCooldownEnd;
-    // The text box fires its change event before moving the cursor, so edits are handled next frame.
+    // OnTextChanged fires before the cursor moves, so edits are handled next frame
     private string _trackedText = string.Empty;
     private bool _editPending;
 
@@ -89,7 +89,7 @@ public sealed partial class PaperWindow
         TranslateButton.Visible = hasLanguages;
         NoLanguageLabel.Visible = !hasLanguages;
 
-        // Without a language, saving only closes the editor.
+        // Without a language, saving only closes the editor
         SaveButton.Text = hasLanguages ? _saveButtonText : Loc.GetString("paper-ui-close-button");
         UpdateSaveWarning();
 
@@ -99,13 +99,13 @@ public sealed partial class PaperWindow
 
     public void ShowWithoutText(bool writing)
     {
-        // No stamps yet either, so they lay out around the text when it arrives.
+        // Stamps come with the text, so they lay out around it
         Populate(new PaperComponent.PaperBoundUserInterfaceState(string.Empty, [], writing ? PaperComponent.PaperAction.Write : PaperComponent.PaperAction.Read));
         BlankPaperIndicator.Visible = false;
     }
 
     /// <summary>
-    /// Redraws the stamps without touching the text. The editor doesn't show stamps.
+    /// Redraws stamps without touching the text. The editor has none.
     /// </summary>
     public void RefreshStamps(List<StampDisplayInfo> stamps)
     {
@@ -167,7 +167,7 @@ public sealed partial class PaperWindow
     {
         cursor = Math.Clamp(cursor, 0, text.Length);
 
-        // The inserted text ends at the cursor.
+        // The inserted text ends at the cursor
         var suffix = 0;
         var maxSuffix = Math.Min(previous.Length, text.Length - cursor);
         while (suffix < maxSuffix && previous[^(suffix + 1)] == text[^(suffix + 1)])
@@ -202,7 +202,7 @@ public sealed partial class PaperWindow
         string newText;
         int newCursor;
 
-        // Right after a section in the same language, extend it.
+        // Right after a section in the same language, extend it
         if (section == null
             && !isDefault
             && start >= close.Length
@@ -216,7 +216,7 @@ public sealed partial class PaperWindow
         }
         else
         {
-            // Inside another section, close it around the new text and reopen it after.
+            // Close the section we're in around the new text, then reopen it
             var before = section != null ? SharedPaperLanguageSystem.ClosingTag + open : open;
             var after = section is { } reopen ? close + SharedPaperLanguageSystem.OpeningTag(reopen) : close;
 
@@ -239,7 +239,7 @@ public sealed partial class PaperWindow
     }
 
     /// <summary>
-    /// Warns next to the save button when the player can't write, or has text in a language they lost.
+    /// Warns when the player can't write, or has text in a language they lost.
     /// </summary>
     private void UpdateSaveWarning()
     {

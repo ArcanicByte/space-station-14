@@ -27,7 +27,6 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
     }
 
     /// <param name="text">Text to show instead of the paper's, like text given back after a failed save.</param>
-    /// <param name="force">Send even if nothing changed.</param>
     private void SendView(Entity<PaperComponent> paper, EntityUid actor, string? text = null, bool force = false)
     {
         var state = EnsureComp<PaperLanguageStateComponent>(paper);
@@ -40,11 +39,11 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
             languages,
             GetDefaultWritingLanguage(actor, languages));
 
-        // Skip views that haven't changed, e.g. when someone else opens the paper.
+        // Skip unchanged views, like when someone else opens the paper
         if (text == null && !force && state.SentViews.TryGetValue(actor, out var last) && last.Matches(view))
             return;
 
-        // Text given back isn't the paper's, so resend the next view.
+        // Text given back isn't the paper's, so resend the next view
         if (text == null)
             state.SentViews[actor] = view;
         else
@@ -91,7 +90,7 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
     /// </summary>
     public override bool CanSave(Entity<PaperComponent> paper, EntityUid actor, string text)
     {
-        // Without a language, saving from the editor just closes it. Forms in the read view still work since that isn't writing.
+        // Without a language, saving just closes the editor. Forms in read mode still work
         if (paper.Comp.Writers.Contains(actor) && GetWritableLanguages(actor).Count == 0)
         {
             _popup.PopupEntity(Loc.GetString("paper-language-cannot-write"), actor, actor);
@@ -100,13 +99,13 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
             return false;
         }
 
-        // Per entity, not per paper, so switching papers doesn't get around it.
+        // Per entity, not per paper, so switching papers doesn't skip it
         if (!TryComp<PaperSaveCooldownComponent>(actor, out var cooldown) || _timing.CurTime >= cooldown.NextSave)
             return true;
 
         _popup.PopupEntity(Loc.GetString("paper-save-cooldown"), actor, actor);
 
-        // The editor clears itself when saving, so give the text back.
+        // The editor clears itself on save, so give the text back
         if (paper.Comp.Writers.Contains(actor))
             SendView(paper, actor, text);
 
@@ -145,9 +144,6 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
     }
 
     private string GetLanguageName(ProtoId<LanguagePrototype> language) => _prototype.TryIndex(language, out var proto) ? proto.Name : language.Id;
-
-    [SubscribeLocalEvent]
-    private void OnPaperStartup(Entity<PaperComponent> paper, ref ComponentStartup args) => UpdateHasWriting(paper);
 
     private void UpdateHasWriting(Entity<PaperComponent> paper)
     {

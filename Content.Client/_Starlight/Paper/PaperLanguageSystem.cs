@@ -8,7 +8,7 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
 {
     [Dependency] private SharedUserInterfaceSystem _ui = default!;
 
-    // The server sends the text, so only predicted stamps are shown straight away.
+    // Text comes from the server, so just redraw predicted stamps
     public override void UpdateViews(Entity<PaperComponent> paper)
     {
         if (_ui.TryGetOpenUi(paper.Owner, PaperUiKey.Key, out var bui))

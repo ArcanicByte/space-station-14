@@ -8,10 +8,10 @@ namespace Content.Server._Starlight.Paper;
 
 public sealed partial class PaperLanguageSystem
 {
-    // Tags filled in through a text save, allowed even in sections the player can't read.
+    // Tags filled in through a save, allowed even in sections the player can't read
     private static readonly Regex _fillableTagRegex = new(@"\[form\]|\[check\]", RegexOptions.Compiled);
 
-    // Buttons rather than text, so they don't belong to any language.
+    // Buttons rather than text, so they don't belong to any language
     private static readonly Regex _interactiveTagRegex = new(@"\[form\]|\[check\]|\[signature\]|\[datetime\]", RegexOptions.Compiled);
 
     /// <summary>
@@ -37,7 +37,7 @@ public sealed partial class PaperLanguageSystem
         var usedIds = new HashSet<int>();
         var result = new List<(ProtoId<LanguagePrototype>, string)>();
 
-        // Locked sections still on the paper, with counts. Each can only be restored once.
+        // Locked sections on the paper, counted so each is only restored once
         var locked = new Dictionary<(ProtoId<LanguagePrototype>, string), int>();
         var lockedLeft = 0;
         foreach (var existing in GetSections(paper, state))
@@ -85,7 +85,7 @@ public sealed partial class PaperLanguageSystem
                 continue;
             }
 
-            // Unchanged text in a language the editor lost stays as it is, so it isn't rewritten for everyone to read.
+            // Unchanged text in a language they lost stays as is, instead of being rewritten readable
             var key = (language, SplitWhitespace(text).Core);
             if (locked.TryGetValue(key, out var count) && count > 0)
             {
@@ -99,7 +99,7 @@ public sealed partial class PaperLanguageSystem
             {
                 result.Add((writing, text));
 
-                // Tags come from the client, so only report real languages back.
+                // Tags come from the client, so only report real languages
                 if (_prototype.HasIndex(language))
                     convertedFrom.Add(language);
             }
@@ -111,7 +111,7 @@ public sealed partial class PaperLanguageSystem
 
         state.HiddenSections.Remove(editor);
 
-        // Leftover locked sections were changed or removed. Duplicates can also fail, so cap the count.
+        // Leftover locked sections were changed or removed. Duplicates can fail too, so cap it
         var erased = Math.Min(tamperedSections, lockedLeft);
         return new PaperMergeResult(Serialize(result), [..convertedFrom], writingLanguage, droppedText, erased, lockedLeft - erased);
     }
@@ -130,7 +130,7 @@ public sealed partial class PaperLanguageSystem
             || !TryMatchFills(original.Rendered, section.Text, out var fills))
             return null;
 
-        // The section also has to still be on the paper, in case someone else removed it in the meantime.
+        // Someone else may have removed it since
         var key = (original.Language, original.Original);
         if (!locked.TryGetValue(key, out var count) || count == 0)
             return null;
@@ -228,7 +228,7 @@ public sealed partial class PaperLanguageSystem
                 continue;
             }
 
-            // Every line gets its own tag.
+            // Every line gets its own tag
             if (runLanguage == language && !whitespaceHasNewline)
             {
                 run.Append(whitespace).Append(text);

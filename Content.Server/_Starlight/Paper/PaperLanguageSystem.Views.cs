@@ -17,17 +17,17 @@ public sealed partial class PaperLanguageSystem
     /// </summary>
     private const char Placeholder = '■';
 
-    // Any markup tag, removed before turning hidden text into placeholders.
+    // Any markup tag, removed before turning hidden text into placeholders
     private static readonly Regex _markupTagRegex = new(@"\[[^\[\]]*\]", RegexOptions.Compiled);
 
-    // Markup tags and check marks, kept as is when obfuscating.
+    // Markup tags and check marks, kept as is when obfuscating
     private static readonly Regex _preservedRegex = new(@"\[[^\[\]]*\]|[☐✔✖]", RegexOptions.Compiled);
 
     protected override List<PaperSection> GetSections(Entity<PaperComponent> paper) =>
         TryComp<PaperLanguageStateComponent>(paper, out var state) ? GetSections(paper, state) : ParseSections(paper.Comp.Content);
 
     /// <summary>
-    /// The paper's sections, parsed once per text. Scrambled text is thrown away when the text changes.
+    /// The paper's sections, cached until the text changes.
     /// </summary>
     private static List<PaperSection> GetSections(Entity<PaperComponent> paper, PaperLanguageStateComponent state)
     {
@@ -35,7 +35,7 @@ public sealed partial class PaperLanguageSystem
         if (ReferenceEquals(state.ScrambledContent, content))
             return state.Sections;
 
-        // Saves make a new string even when the text is the same, so compare the text.
+        // Saves make a new string even when the text is the same
         if (state.ScrambledContent != content)
         {
             state.Sections = ParseSections(content);
@@ -90,7 +90,7 @@ public sealed partial class PaperLanguageSystem
             state.HiddenSections[viewer] = hidden;
         }
 
-        // Ids the viewer was already sent, so text they're editing keeps working.
+        // Reuse ids the viewer already has, so text they're editing still matches
         var existingIds = new Dictionary<HiddenPaperSection, Queue<int>>();
         foreach (var (existingId, existing) in hidden.OrderBy(x => x.Key))
         {
@@ -142,7 +142,7 @@ public sealed partial class PaperLanguageSystem
         if (existingIds.TryGetValue(section, out var ids) && ids.TryDequeue(out var existingId))
             return existingId;
 
-        // Ids are only ever added, so they always run from 1 up to the count.
+        // Ids are only ever added, so they run from 1 to the count
         var id = hidden.Count + 1;
         hidden[id] = section;
         return id;
@@ -179,7 +179,7 @@ public sealed partial class PaperLanguageSystem
 
     private void AppendObfuscated(StringBuilder builder, string text, LanguagePrototype language)
     {
-        // Line by line, so the layout survives.
+        // Line by line, so the layout survives
         var lines = text.Split('\n');
         for (var i = 0; i < lines.Length; i++)
         {

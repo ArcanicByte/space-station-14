@@ -15,7 +15,7 @@ public sealed partial class PaperBoundUserInterface
         _window.InitializeLanguageBar();
         _window.OnLanguageSelected += language => SendMessage(new PaperSelectLanguageMessage(language));
 
-        // Set up the window until the server sends the text.
+        // Show a blank paper until the server sends the text
         if (EntMan.TryGetComponent<PaperComponent>(Owner, out var paper) && PlayerManager.LocalEntity is { } player)
         {
             var writing = paper.Writers.Contains(player);
@@ -31,7 +31,7 @@ public sealed partial class PaperBoundUserInterface
     }
 
     /// <summary>
-    /// Whether the text has arrived. Stamps wait for it so they lay out around the text.
+    /// Whether the server's text has arrived. Stamps wait for it.
     /// </summary>
     private bool _hasText;
 

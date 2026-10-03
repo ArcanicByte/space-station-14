@@ -19,12 +19,12 @@ public sealed partial class LangTagHandler : IMarkupTagHandler
 
     public string Name => "lang";
 
-    // [/lang] has no value, so always push and pop exactly one font and color.
+    // [/lang] has no value, so always push and pop exactly one font and color
     public void PushDrawContext(MarkupNode node, MarkupDrawingContext context)
     {
         GetStyle(node, out var fontId, out var color);
 
-        // Load the font through the font tag, like chat does.
+        // Load the font through the font tag, like chat
         if (fontId != null && _tags.GetMarkupTagHandler("font") is { } fontTag)
             fontTag.PushDrawContext(new MarkupNode("font", new MarkupParameter(fontId), null), context);
         else if (context.Font.TryPeek(out var currentFont))
@@ -45,7 +45,7 @@ public sealed partial class LangTagHandler : IMarkupTagHandler
     }
 
     /// <summary>
-    /// Gets the language's font and color, same as chat.
+    /// The language's font and color, same as chat.
     /// </summary>
     private void GetStyle(MarkupNode node, out string? fontId, out Color? color)
     {
@@ -59,7 +59,7 @@ public sealed partial class LangTagHandler : IMarkupTagHandler
         var obfuscated = _player.LocalEntity is not { } player
             || !_entityManager.System<SharedLanguageSystem>().CanUnderstand(player, language.ID);
 
-        // Obfuscation fonts are only used when the reader doesn't understand it.
+        // Obfuscation fonts are only for readers who don't understand it
         if (language.Speech.FontId is { } id
             && !(language.Speech.ObfuscationFont == true && !obfuscated)
             && _prototype.HasIndex<FontPrototype>(id))

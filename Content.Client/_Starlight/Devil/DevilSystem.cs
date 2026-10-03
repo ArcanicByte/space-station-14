@@ -6,7 +6,7 @@ namespace Content.Client._Starlight.Devil;
 
 public sealed class DevilSystem : SharedDevilSystem
 {
-    // Clients don't get the contract text, so the server handles examining and signing.
+    // Clients don't have the contract text, so the server handles this
     protected override void OnExamineEvent(EntityUid uid, InfernalContractComponent contractComp, ref ExaminedEvent args)
     {
         if (contractComp.Completed)

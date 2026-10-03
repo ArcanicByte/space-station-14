@@ -138,7 +138,7 @@ public abstract partial class SharedDevilSystem : EntitySystem
 
     protected virtual void OnExamineEvent(EntityUid uid, InfernalContractComponent contractComp, ref ExaminedEvent args)
     {
-        // Anyone can tell it's signed. Signing also clears unfilled clauses, so the terms can't be parsed anymore.
+        // Anyone can tell it's signed. Signing also clears unfilled clauses, so the terms can't be parsed
         if (contractComp.Completed)
         {
             args.PushMarkup(Loc.GetString("infernal-contract-examined-Signed"));

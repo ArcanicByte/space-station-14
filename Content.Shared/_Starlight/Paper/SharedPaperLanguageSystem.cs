@@ -21,7 +21,7 @@ public abstract partial class SharedPaperLanguageSystem : EntitySystem
     /// </summary>
     public static readonly ProtoId<LanguagePrototype> DefaultLanguage = "GalacticCommon";
 
-    // Opening [lang="X"] or [lang="X" id=N] tags, and closing [/lang] tags.
+    // [lang="X"], [lang="X" id=N] and [/lang]
     private static readonly Regex _languageTagRegex = new(@"\[lang=""?(?<lang>[A-Za-z0-9_]+)""?(?:\s+id=(?<id>\d+))?\s*\]|\[/lang\]", RegexOptions.Compiled);
 
     public bool IsWritable(ProtoId<LanguagePrototype> language) => _prototype.TryIndex(language, out var proto) && proto.Writable;

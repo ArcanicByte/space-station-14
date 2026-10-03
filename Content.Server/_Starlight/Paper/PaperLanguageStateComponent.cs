@@ -31,7 +31,7 @@ public sealed partial class PaperLanguageStateComponent : Component
     public Dictionary<EntityUid, Dictionary<int, HiddenPaperSection>> HiddenSections = [];
 
     /// <summary>
-    /// Sections scrambled the first time someone couldn't read them, shared by every view.
+    /// Scrambled text per section, shared by everyone who can't read it.
     /// </summary>
     [ViewVariables]
     public Dictionary<(ProtoId<LanguagePrototype> Language, string Text), string> Scrambled = [];
@@ -57,7 +57,7 @@ public readonly record struct PaperSentView(
     List<ProtoId<LanguagePrototype>> Languages,
     ProtoId<LanguagePrototype>? DefaultLanguage)
 {
-    // SetContent always stores a new string, so the same reference means the text hasn't changed.
+    // Changed text is always a new string, so references are enough
     public bool Matches(PaperSentView other) =>
         ReferenceEquals(Content, other.Content)
         && ReferenceEquals(Stamps, other.Stamps)
