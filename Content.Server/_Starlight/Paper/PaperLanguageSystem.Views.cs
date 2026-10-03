@@ -41,7 +41,17 @@ public sealed partial class PaperLanguageSystem
         if (state.ScrambledContent != content)
         {
             state.Sections = ParseSections(content);
-            state.Scrambled.Clear();
+
+            // Keep scrambles for text still on the paper, so a small edit doesn't redo them all
+            var onPaper = new HashSet<(ProtoId<LanguagePrototype>, string)>();
+            foreach (var section in state.Sections)
+                onPaper.Add((section.Language ?? DefaultLanguage, SplitWhitespace(section.Text).Core));
+
+            foreach (var key in state.Scrambled.Keys)
+            {
+                if (!onPaper.Contains(key))
+                    state.Scrambled.Remove(key);
+            }
         }
 
         state.ScrambledContent = content;
