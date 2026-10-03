@@ -121,7 +121,7 @@ public sealed partial class LabelSystem : EntitySystem
             }
 
             args.PushMarkup(Loc.GetString("comp-paper-label-has-label"));
-            var text = GetReadableLabelText((item, paper), args.Examiner); // Starlight-edit
+            var text = _paperLanguage.GetStyledView((item, paper), args.Examiner); // Starlight-edit
             // STARLIGHT: Remove MOST markup for the examine text.
             var message = FormattedMessage.FromMarkupPermissive(text.TrimEnd()).SanitizeWhitelist(FormattedMessageSanitizer.PaperLabelTags).ToMarkup();
             args.PushMarkup(message);

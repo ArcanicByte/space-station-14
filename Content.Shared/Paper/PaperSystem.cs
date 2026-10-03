@@ -228,7 +228,7 @@ public sealed partial class PaperSystem : EntitySystem
     private void OnInputTextMessage(Entity<PaperComponent> entity, ref PaperInputTextMessage args)
     {
         // Starlight-start
-        if (!CanSave(entity, args.Actor, args.Text))
+        if (!_paperLanguage.CanSave(entity, args.Actor, args.Text))
             return;
         // Starlight-end
 
@@ -241,7 +241,7 @@ public sealed partial class PaperSystem : EntitySystem
         if (args.Text.Length <= entity.Comp.ContentSize)
         {
             // Starlight-start
-            var content = MergeLanguageEdit(entity, args.Actor, args.Text);
+            var content = _paperLanguage.SaveEdit(entity, args.Actor, args.Text);
             SetContent(entity, content);
 
             var paperStatus = string.IsNullOrWhiteSpace(content) ? PaperStatus.Blank : PaperStatus.Written;
@@ -464,7 +464,7 @@ public sealed partial class PaperSystem : EntitySystem
     }
 
     # region Starlight
-    private void UpdateUserInterface(Entity<PaperComponent> entity) => UpdateLanguageUserInterface(entity);
+    private void UpdateUserInterface(Entity<PaperComponent> entity) => _paperLanguage.UpdateViews(entity);
 
     private void OnSignatureRequest(Entity<PaperComponent> entity, ref PaperSignatureRequestMessage args)
     {
