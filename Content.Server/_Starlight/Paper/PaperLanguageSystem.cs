@@ -4,7 +4,6 @@ using Content.Shared._Starlight.Language.Events;
 using Content.Shared._Starlight.Paper;
 using Content.Shared.Paper;
 using Content.Shared.Popups;
-using Content.Shared.UserInterface;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using static Content.Shared.Paper.PaperComponent;
