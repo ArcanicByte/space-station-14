@@ -245,7 +245,7 @@ public sealed partial class PaperWindow
 
     private void UpdateLockedWarning()
     {
-        LockedWarningLabel.Visible = InputContainer.Visible && _trackedText.Contains(" id=", StringComparison.Ordinal);
+        LockedWarning.Visible = InputContainer.Visible && _trackedText.Contains(" id=", StringComparison.Ordinal);
         UpdateSaveWarning();
     }
 
