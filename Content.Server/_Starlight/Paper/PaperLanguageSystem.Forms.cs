@@ -180,10 +180,7 @@ public sealed partial class PaperLanguageSystem
         if (section != DefaultLanguage)
             builder.Append(ClosingTag);
 
-        if (language == DefaultLanguage)
-            builder.Append(answer);
-        else
-            AppendTagged(builder, language, null, answer);
+        AppendTagged(builder, language, null, answer);
 
         if (section != DefaultLanguage)
             builder.Append(OpeningTag(section));

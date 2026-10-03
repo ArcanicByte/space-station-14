@@ -227,7 +227,8 @@ public sealed partial class PaperWindow
         if (locked || (section ?? SharedPaperLanguageSystem.DefaultLanguage) == language)
             return;
 
-        var isDefault = language == SharedPaperLanguageSystem.DefaultLanguage;
+        // Inside a section, Common needs its own tag, since closing one only goes back to the one around it
+        var isDefault = language == SharedPaperLanguageSystem.DefaultLanguage && section == null;
         var open = isDefault ? string.Empty : SharedPaperLanguageSystem.OpeningTag(language);
         var close = isDefault ? string.Empty : SharedPaperLanguageSystem.ClosingTag;
 
