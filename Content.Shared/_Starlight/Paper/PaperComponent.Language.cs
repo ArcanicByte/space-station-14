@@ -20,7 +20,7 @@ public sealed partial class PaperComponent
     public HashSet<EntityUid> Writers = [];
 
     [DataField]
-    public TimeSpan ReopenDelay = TimeSpan.FromSeconds(0.1);
+    public TimeSpan ReopenDelay = TimeSpan.FromSeconds(0.25);
 
     [ViewVariables]
     public Dictionary<EntityUid, TimeSpan> ReopenTimes = [];

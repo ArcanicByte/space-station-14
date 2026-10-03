@@ -67,6 +67,7 @@ public sealed partial class PaperWindow
         TranslateButton.OnPressed += _ => TranslateInput();
         Input.OnTextChanged += _ => _editPending = true;
         LockedWarningLabel.SetMessage(Loc.GetString("paper-ui-locked-warning"), null, Color.Gold);
+        NoLanguageLabel.FontColorOverride = Color.Gold;
         OnSaved += _ => s_saveCooldownEnd = _timing.RealTime + _saveCooldown;
         _saveButtonText = SaveButton.Text;
     }
