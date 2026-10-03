@@ -8,6 +8,8 @@ namespace Content.Shared._Starlight.Paper;
 
 public abstract partial class SharedPaperLanguageSystem
 {
+    public const string ClosingTag = "[/lang]";
+
     public readonly record struct PaperSection(ProtoId<LanguagePrototype>? Language, string Text, int? Id);
 
     public static List<PaperSection> ParseSections(string content)
@@ -116,7 +118,6 @@ public abstract partial class SharedPaperLanguageSystem
     }
 
     public static string OpeningTag(ProtoId<LanguagePrototype> language) => $"[lang=\"{language}\"]";
-    public const string ClosingTag = "[/lang]";
     public static string StripLanguageTags(string content) => _languageTagRegex.Replace(content, string.Empty);
 
     /// <summary>

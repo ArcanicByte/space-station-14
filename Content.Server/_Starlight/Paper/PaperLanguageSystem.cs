@@ -21,6 +21,35 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
     // The merge done by CanSave, used by SaveEdit right after
     private (EntityUid Paper, EntityUid Actor, string Text, PaperMergeResult Result)? _pendingMerge;
 
+    [SubscribeLocalEvent]
+    private void OnLanguagesUpdate(Entity<UserInterfaceUserComponent> ent, ref LanguagesUpdateEvent args)
+    {
+        var timer = Stopwatch.GetTimestamp();
+        foreach (var (uiEntity, keys) in ent.Comp.OpenInterfaces)
+        {
+            if (keys.Contains(PaperUiKey.Key) && TryComp<PaperComponent>(uiEntity, out var paper))
+                SendView((uiEntity, paper), ent.Owner, force: true);
+        }
+
+        Logger.GetSawmill("paper.lang").Info($"OnLanguagesUpdate took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
+    }
+
+    // Opening by hand is predicted, so the client's view request can arrive before the server opens the UI and get dropped.
+    // This covers that. The request covers opens started by the server, where this send can arrive before the client's window exists
+    [SubscribeLocalEvent]
+    private void OnUIOpened(Entity<PaperComponent> paper, ref BoundUIOpenedEvent args)
+    {
+        if (args.UiKey.Equals(PaperUiKey.Key))
+            SendView(paper, args.Actor);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnViewRequest(Entity<PaperComponent> paper, ref PaperViewRequestMessage args) => SendView(paper, args.Actor, force: true);
+
+    [SubscribeLocalEvent]
+    private void OnSelectLanguage(Entity<PaperComponent> paper, ref PaperSelectLanguageMessage args) =>
+        EnsureComp<PaperLanguageStateComponent>(paper).WritingLanguages[args.Actor] = args.Language;
+
     public override void UpdateViews(Entity<PaperComponent> paper)
     {
         var timer = Stopwatch.GetTimestamp();
@@ -70,35 +99,6 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
 
         Logger.GetSawmill("paper.lang").Info($"SendView took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
     }
-
-    [SubscribeLocalEvent]
-    private void OnLanguagesUpdate(Entity<UserInterfaceUserComponent> ent, ref LanguagesUpdateEvent args)
-    {
-        var timer = Stopwatch.GetTimestamp();
-        foreach (var (uiEntity, keys) in ent.Comp.OpenInterfaces)
-        {
-            if (keys.Contains(PaperUiKey.Key) && TryComp<PaperComponent>(uiEntity, out var paper))
-                SendView((uiEntity, paper), ent.Owner, force: true);
-        }
-
-        Logger.GetSawmill("paper.lang").Info($"OnLanguagesUpdate took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
-    }
-
-    // Opening by hand is predicted, so the client's view request can arrive before the server opens the UI and get dropped.
-    // This covers that. The request covers opens started by the server, where this send can arrive before the client's window exists
-    [SubscribeLocalEvent]
-    private void OnUIOpened(Entity<PaperComponent> paper, ref BoundUIOpenedEvent args)
-    {
-        if (args.UiKey.Equals(PaperUiKey.Key))
-            SendView(paper, args.Actor);
-    }
-
-    [SubscribeLocalEvent]
-    private void OnViewRequest(Entity<PaperComponent> paper, ref PaperViewRequestMessage args) => SendView(paper, args.Actor, force: true);
-
-    [SubscribeLocalEvent]
-    private void OnSelectLanguage(Entity<PaperComponent> paper, ref PaperSelectLanguageMessage args) =>
-        EnsureComp<PaperLanguageStateComponent>(paper).WritingLanguages[args.Actor] = args.Language;
 
     public override void ClearViewer(Entity<PaperComponent> paper, EntityUid viewer)
     {

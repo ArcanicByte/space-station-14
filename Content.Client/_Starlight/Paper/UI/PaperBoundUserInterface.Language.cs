@@ -8,6 +8,11 @@ namespace Content.Client.Paper.UI;
 
 public sealed partial class PaperBoundUserInterface
 {
+    /// <summary>
+    /// Whether the server's text has arrived. Stamps wait for it.
+    /// </summary>
+    private bool _hasText;
+
     private void OpenLanguage()
     {
         var timer = Stopwatch.GetTimestamp();
@@ -35,11 +40,6 @@ public sealed partial class PaperBoundUserInterface
         SendMessage(new PaperViewRequestMessage());
         Logger.GetSawmill("paper.lang").Info($"OpenLanguage took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
     }
-
-    /// <summary>
-    /// Whether the server's text has arrived. Stamps wait for it.
-    /// </summary>
-    private bool _hasText;
 
     /// <summary>
     /// Shows predicted stamps right away.

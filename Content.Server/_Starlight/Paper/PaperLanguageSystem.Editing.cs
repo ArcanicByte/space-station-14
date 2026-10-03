@@ -9,6 +9,8 @@ namespace Content.Server._Starlight.Paper;
 
 public sealed partial class PaperLanguageSystem
 {
+    private const string CheckTag = "[check]";
+
     // Check boxes can be ticked through a save, even in sections the player can't read. Forms have their own message
     private static readonly Regex _checkTagRegex = new(@"\[check\]", RegexOptions.Compiled);
 
@@ -19,8 +21,6 @@ public sealed partial class PaperLanguageSystem
     /// Marks a [check] tag can be filled in with.
     /// </summary>
     private static readonly char[] _checkMarks = ['☐', '✔', '✖'];
-
-    private const string CheckTag = "[check]";
 
     private PaperMergeResult MergeEdit(
         Entity<PaperComponent> paper,
