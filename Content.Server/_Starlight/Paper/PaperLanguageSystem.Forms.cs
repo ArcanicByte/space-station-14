@@ -132,7 +132,7 @@ public sealed partial class PaperLanguageSystem
     private string? FillAt(Entity<PaperComponent> paper, EntityUid actor, int position, int tagLength, ProtoId<LanguagePrototype> language, string answer)
     {
         var content = paper.Comp.Content;
-        var filled = content[..position] + TagAnswer(language, answer) + content[(position + tagLength)..];
+        var filled = content[..position] + TagAnswer(content, position, language, answer) + content[(position + tagLength)..];
         if (filled.Length <= paper.Comp.ContentSize)
             return filled;
 
@@ -182,8 +182,14 @@ public sealed partial class PaperLanguageSystem
     }
 
     /// <summary>
-    /// The answer tagged with its language. Saves keep buttons outside sections, so it's always in Common.
+    /// Turns a form, signature or date answer into the text that replaces the button on the paper, tagged with the language it was written in.
     /// </summary>
-    private static string TagAnswer(ProtoId<LanguagePrototype> language, string answer) =>
-        language == DefaultLanguage ? answer : OpeningTag(language) + answer + ClosingTag;
+    private static string TagAnswer(string content, int position, ProtoId<LanguagePrototype> language, string answer)
+    {
+        var section = GetSectionAt(content, position).Language;
+        if (section == language || (section == null && language == DefaultLanguage))
+            return answer;
+
+        return OpeningTag(language) + answer + ClosingTag;
+    }
 }
