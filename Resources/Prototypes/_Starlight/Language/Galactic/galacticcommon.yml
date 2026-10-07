@@ -1,6 +1,7 @@
 # The "Default Language" for everyone other than Universal.
 - type: language
   id: GalacticCommon
+  writable: true
   icon: LanguageIconGalCom
   iconUnderstood: false
   chatPrefix: g

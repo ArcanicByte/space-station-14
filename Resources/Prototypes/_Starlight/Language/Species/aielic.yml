@@ -1,6 +1,7 @@
 # High Elven language. Actual elves coming soon?
 - type: language
   id: Aielic
+  writable: true
   speech:
     color: "#80a7d5"
 #    fontId: DefaultItalic

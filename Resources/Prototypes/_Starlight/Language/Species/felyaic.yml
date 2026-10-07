@@ -1,6 +1,7 @@
 # A fancy version of Darktongue, spoken exclusively by detarii
 - type: language
   id: Felyaic # felya = cave in quenya
+  writable: true
   speech:
     color: "#6c00ff" # electric blue
     fontId: Darktongue

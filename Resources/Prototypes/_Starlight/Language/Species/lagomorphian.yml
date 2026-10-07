@@ -1,5 +1,6 @@
 - type: language
   id: Lagomorphian
+  writable: true
   icon: LanguageIconLagomorph
   chatPrefix: lag
   speech:

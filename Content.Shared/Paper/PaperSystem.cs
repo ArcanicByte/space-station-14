@@ -19,6 +19,7 @@ using Content.Shared.IdentityManagement.Components;
 using Content.Shared.Mind.Components;
 using Content.Shared.Roles;
 using Content.Shared._Starlight.Time;
+using Content.Shared._Starlight.Paper;
 // Starlight-end
 
 namespace Content.Shared.Paper;
@@ -91,6 +92,7 @@ public sealed partial class PaperSystem : EntitySystem
     private void BeforeUIOpen(Entity<PaperComponent> entity, ref BeforeActivatableUIOpenEvent args)
     {
         entity.Comp.Mode = PaperAction.Read;
+        entity.Comp.Writers.Remove(args.User); // Starlight-edit
         UpdateUserInterface(entity);
     }
 
@@ -101,7 +103,7 @@ public sealed partial class PaperSystem : EntitySystem
 
         using (args.PushGroup(nameof(PaperComponent)))
         {
-            if (entity.Comp.Content != "")
+            if (entity.Comp.HasWriting) // Starlight-edit
             {
                 args.PushMarkup(
                     Loc.GetString(
@@ -152,7 +154,7 @@ public sealed partial class PaperSystem : EntitySystem
         var editable = entity.Comp.StampedBy.Count == 0 || _tagSystem.HasTag(args.Used, WriteIgnoreStampsTag);
         if (_tagSystem.HasTag(args.Used, WriteTag))
         {
-            if (editable)
+            if (editable && CanOpenAgain(entity, args.User)) // Starlight-edit
             {
                 if (entity.Comp.EditingDisabled)
                 {
@@ -182,6 +184,7 @@ public sealed partial class PaperSystem : EntitySystem
                 RaiseLocalEvent(args.Used, ref writeEvent);
 
                 entity.Comp.Mode = PaperAction.Write;
+                entity.Comp.Writers.Add(args.User); // Starlight-edit
                 _uiSystem.OpenUi(entity.Owner, PaperUiKey.Key, args.User);
                 UpdateUserInterface(entity);
             }
@@ -231,11 +234,13 @@ public sealed partial class PaperSystem : EntitySystem
         if (ev.Cancelled)
             return;
 
-        if (args.Text.Length <= entity.Comp.ContentSize)
+        // Starlight-start
+        if (_paperLanguage.TrySave(entity, args.Actor, args.Text) is { } content)
         {
-            SetContent(entity, args.Text);
+            SetContent(entity, content);
 
-            var paperStatus = string.IsNullOrWhiteSpace(args.Text) ? PaperStatus.Blank : PaperStatus.Written;
+            var paperStatus = string.IsNullOrWhiteSpace(content) ? PaperStatus.Blank : PaperStatus.Written;
+            // Starlight-end
 
             if (TryComp<AppearanceComponent>(entity, out var appearance))
                 _appearance.SetData(entity, PaperVisuals.Status, paperStatus, appearance);
@@ -245,12 +250,19 @@ public sealed partial class PaperSystem : EntitySystem
 
             _adminLogger.Add(LogType.Chat,
                 LogImpact.Low,
-                $"{ToPrettyString(args.Actor):player} has written on {ToPrettyString(entity):entity} the following text: {args.Text}");
+                $"{ToPrettyString(args.Actor):player} has written on {ToPrettyString(entity):entity} the following text: {content}"); // Starlight-edit
 
             _audio.PlayPvs(entity.Comp.Sound, entity);
         }
+        // Starlight-start: rejected saves already sent their own view
+        else
+        {
+            return;
+        }
+        // Starlight-end
 
         entity.Comp.Mode = PaperAction.Read;
+        entity.Comp.Writers.Remove(args.Actor); // Starlight-edit
         UpdateUserInterface(entity);
     }
 
@@ -452,17 +464,15 @@ public sealed partial class PaperSystem : EntitySystem
         _appearance.SetData(entity, PaperVisuals.Status, status, appearance);
     }
 
-    private void UpdateUserInterface(Entity<PaperComponent> entity)
-    {
-        _uiSystem.SetUiState(entity.Owner, PaperUiKey.Key, new PaperBoundUserInterfaceState(entity.Comp.Content, entity.Comp.StampedBy, entity.Comp.Mode)); // Starlight-edit
-    }
-
     # region Starlight
+    private void UpdateUserInterface(Entity<PaperComponent> entity) => _paperLanguage.UpdateViews(entity);
 
     private void OnSignatureRequest(Entity<PaperComponent> entity, ref PaperSignatureRequestMessage args)
     {
         var signature = GetPlayerSignature(args.Actor);
-        var newText = ReplaceNthSignatureTag(entity.Comp.Content, args.SignatureIndex, signature);
+        if (_paperLanguage.FillTag(entity, args.Actor, SharedPaperLanguageSystem.SignatureTag, args.SignatureIndex, signature) is not { } newText)
+            return;
+
         SetContent(entity, newText);
 
         _adminLogger.Add(LogType.Chat, LogImpact.Low,
@@ -477,7 +487,9 @@ public sealed partial class PaperSystem : EntitySystem
         // shift time is more helpful than the date for rounds, date is still included for the flavor
         var formatted = $"{date} // {(int)shiftTime.TotalHours:D2}:{shiftTime.Minutes:D2} Shift Time";
 
-        var newText = ReplaceNthDateTimeTag(entity.Comp.Content, args.DateTimeIndex, formatted);
+        if (_paperLanguage.FillTag(entity, args.Actor, SharedPaperLanguageSystem.DateTimeTag, args.DateTimeIndex, formatted) is not { } newText)
+            return;
+
         SetContent(entity, newText);
     }
 

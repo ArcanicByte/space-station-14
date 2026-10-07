@@ -1,5 +1,6 @@
 - type: language
   id: Nekomimetic
+  writable: true
   icon: LanguageIconNeko
   chatPrefix: nek
   speech:

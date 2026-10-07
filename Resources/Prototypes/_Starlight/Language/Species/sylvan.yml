@@ -1,5 +1,6 @@
 - type: language
   id: Sylvan
+  writable: true
   icon: LanguageIconPlant
   chatPrefix: syl
   speech:

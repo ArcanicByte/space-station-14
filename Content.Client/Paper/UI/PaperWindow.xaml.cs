@@ -303,7 +303,7 @@ namespace Content.Client.Paper.UI
             // The markup system converts [form] and [signature] tags into interactive buttons
             var fm = new FormattedMessage();
             fm.AddMarkupPermissive(state.Text);
-            WrittenTextLabel.SetMessage(fm, UserFormattableTags.BaseAllowedTags, _writtenTextColor);
+            WrittenTextLabel.SetMessage(fm, PaperFormattableTags.AllowedTags, _writtenTextColor); // Starlight-edit
 
             // Add extra bottom margin based on tag count to prevent cutoff (only in read mode)
             var tagCount = CountTags(state.Text);
@@ -366,7 +366,7 @@ namespace Content.Client.Paper.UI
         {
             if (MaxInputLength != -1)
             {
-                var inputLength = Input.TextLength;
+                var inputLength = Math.Max(0, Input.TextLength + HiddenLength); // Starlight-edit
                 // Display current vs maximum character count
                 FillStatus.Text = Loc.GetString("paper-ui-fill-level",
                     ("currentLength", inputLength),
@@ -400,6 +400,7 @@ namespace Content.Client.Paper.UI
         /// <param name="formIndex">Zero-based index of which [form] tag to replace</param>
         public void OpenFormDialog(int formIndex)
         {
+            var version = ContentVersion; // Starlight-edit
             // Find and highlight the form button
             var formButton = FindFormButton(formIndex);
             if (formButton != null)
@@ -407,6 +408,7 @@ namespace Content.Client.Paper.UI
 
             // Create the popup dialog structure
             var popup = new Popup { CloseOnClick = false }; // Starlight
+            _activeFormPopup = popup; // Starlight-edit
             var vbox = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, Margin = new Thickness(10) };
             var editContainer = new PanelContainer { StyleClasses = { "TransparentBorderedWindowPanel" } };
             var edit = new LineEdit { MinSize = new Vector2(200, 0), Margin = new Thickness(5) };
@@ -421,8 +423,7 @@ namespace Content.Client.Paper.UI
             {
                 if (!string.IsNullOrEmpty(edit.Text))
                 {
-                    var newText = ReplaceNthFormTag(_currentRawText, formIndex, edit.Text);
-                    OnSaved?.Invoke(newText);
+                    OnFormFilled?.Invoke(version, formIndex, edit.Text); // Starlight-edit
                 }
                 if (formButton != null)
                     formButton.ModulateSelfOverride = null;
@@ -441,8 +442,7 @@ namespace Content.Client.Paper.UI
             {
                 if (!string.IsNullOrEmpty(edit.Text))
                 {
-                    var newText = ReplaceNthFormTag(_currentRawText, formIndex, edit.Text);
-                    OnSaved?.Invoke(newText);
+                    OnFormFilled?.Invoke(version, formIndex, edit.Text); // Starlight-edit
                 }
                 popup.Close();
             };
@@ -575,6 +575,7 @@ namespace Content.Client.Paper.UI
         /// <param name="checkIndex">Zero-based index of which [check] tag to replace</param>
         public void OpenCheckDialog(int checkIndex)
         {
+            var version = ContentVersion; // Starlight-edit
             // Close any existing check popup
             if (_activeCheckPopup != null)
             {
@@ -599,20 +600,17 @@ namespace Content.Client.Paper.UI
             var crossBtn = new Button { Text = Loc.GetString("paper-check-cross-button"), MinWidth = 80 };
 
             blankBtn.OnPressed += _ => {
-                var newText = ReplaceNthCheckTag(_currentRawText, checkIndex, "☐");
-                OnSaved?.Invoke(newText);
+                OnCheckFilled?.Invoke(version, checkIndex, '☐'); // Starlight-edit
                 CloseCheckDialog();
             };
 
             checkBtn.OnPressed += _ => {
-                var newText = ReplaceNthCheckTag(_currentRawText, checkIndex, "✔");
-                OnSaved?.Invoke(newText);
+                OnCheckFilled?.Invoke(version, checkIndex, '✔'); // Starlight-edit
                 CloseCheckDialog();
             };
 
             crossBtn.OnPressed += _ => {
-                var newText = ReplaceNthCheckTag(_currentRawText, checkIndex, "✖");
-                OnSaved?.Invoke(newText);
+                OnCheckFilled?.Invoke(version, checkIndex, '✖'); // Starlight-edit
                 CloseCheckDialog();
             };
 
