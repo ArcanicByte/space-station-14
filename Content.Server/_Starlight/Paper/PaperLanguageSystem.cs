@@ -153,7 +153,7 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
         }
 
         // Per player, not per paper. Switching papers doesn't skip it
-        if (IsOnSaveCooldown(actor))
+        if (!TryStartCooldown(paper, actor))
         {
             SendView(paper, actor, text);
             return null;
@@ -177,7 +177,6 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
         }
 
         viewer?.HiddenSections.Clear();
-        StartCooldown(paper, actor);
         ShowSavePopup(actor, result, writing, viewer?.EditVersion != state.ContentVersion);
 
         Logger.GetSawmill("paper.lang").Info($"TrySave took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
@@ -186,24 +185,23 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
 
     private void RejectFull(Entity<PaperComponent> paper, EntityUid actor, string text)
     {
-        StartCooldown(paper, actor);
         _popup.PopupEntity(Loc.GetString("paper-full"), actor, actor);
         SendView(paper, actor, text);
     }
 
-    private bool IsOnSaveCooldown(EntityUid actor)
+    /// <summary>
+    /// Starts the save cooldown. False with a popup if it's still running.
+    /// </summary>
+    private bool TryStartCooldown(Entity<PaperComponent> paper, EntityUid actor)
     {
-        if (!TryComp<PaperSaveCooldownComponent>(actor, out var cooldown) || _timing.CurTime >= cooldown.NextSave)
+        if (TryComp<PaperSaveCooldownComponent>(actor, out var cooldown) && _timing.CurTime < cooldown.NextSave)
+        {
+            _popup.PopupEntity(Loc.GetString("paper-save-cooldown"), actor, actor);
             return false;
+        }
 
-        _popup.PopupEntity(Loc.GetString("paper-save-cooldown"), actor, actor);
+        EnsureComp<PaperSaveCooldownComponent>(actor).NextSave = _timing.CurTime + paper.Comp.SaveDelay;
         return true;
-    }
-
-    private void StartCooldown(Entity<PaperComponent> paper, EntityUid actor)
-    {
-        var cooldown = EnsureComp<PaperSaveCooldownComponent>(actor);
-        cooldown.NextSave = _timing.CurTime + paper.Comp.SaveDelay;
     }
 
     /// <summary>

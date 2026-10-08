@@ -55,10 +55,9 @@ public sealed partial class PaperLanguageSystem
     {
         var timer = Stopwatch.GetTimestamp();
         var actor = args.Actor;
-        if (!CheckMarks.Contains(args.Mark) || !CanFill(paper, actor) || IsOnSaveCooldown(actor))
+        if (!CheckMarks.Contains(args.Mark) || !CanFill(paper, actor) || !TryStartCooldown(paper, actor))
             return;
 
-        StartCooldown(paper, actor);
         if (FindCurrentTag(paper, actor, CheckTag, args.ContentVersion, args.Index) is not { } position)
             return;
 
@@ -146,10 +145,9 @@ public sealed partial class PaperLanguageSystem
     private bool TryStartFill(Entity<PaperComponent> paper, EntityUid actor, out ProtoId<LanguagePrototype> language)
     {
         language = default;
-        if (IsOnSaveCooldown(actor))
+        if (!TryStartCooldown(paper, actor))
             return false;
 
-        StartCooldown(paper, actor);
         if (GetWritingLanguage(EnsureComp<PaperLanguageStateComponent>(paper), actor) is not { } writing)
         {
             _popup.PopupEntity(Loc.GetString("paper-form-no-language"), actor, actor);
