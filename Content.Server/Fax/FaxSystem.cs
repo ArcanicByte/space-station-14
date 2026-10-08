@@ -352,6 +352,7 @@ public sealed partial class FaxSystem : EntitySystem
     {
         args.Label = args.Label?[..Math.Min(args.Label.Length, FaxFileMessageValidation.MaxLabelSize)];
         args.Content = args.Content[..Math.Min(args.Content.Length, FaxFileMessageValidation.MaxContentSize)];
+        args.Content = _paperLanguage.CleanPrintedText(args.Actor, args.Content); // Starlight-edit
         PrintFile(uid, component, args);
     }
 

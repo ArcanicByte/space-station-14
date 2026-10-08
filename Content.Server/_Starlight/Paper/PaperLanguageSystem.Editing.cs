@@ -112,6 +112,21 @@ public sealed partial class PaperLanguageSystem
     }
 
     /// <summary>
+    /// Text printed from a file. Sections in languages the player can't write become Galactic Common.
+    /// </summary>
+    public string CleanPrintedText(EntityUid actor, string text)
+    {
+        var sections = new List<(ProtoId<LanguagePrototype>, string)>();
+        foreach (var section in ParseSections(text))
+        {
+            var language = section.Language ?? DefaultLanguage;
+            sections.Add((CanWrite(actor, language) ? language : DefaultLanguage, section.Text));
+        }
+
+        return Serialize(sections);
+    }
+
+    /// <summary>
     /// Uses up one copy of a section on the paper, false if none are left.
     /// </summary>
     private static bool TryTakeSection(Dictionary<(ProtoId<LanguagePrototype>, string), int> onPaper, (ProtoId<LanguagePrototype>, string) key)
