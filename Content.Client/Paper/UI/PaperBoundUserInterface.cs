@@ -55,6 +55,6 @@ public sealed partial class PaperBoundUserInterface : BoundUserInterface // Star
         }
     }
 
-    private void OnSignatureRequested(int signatureIndex) => SendMessage(new PaperSignatureRequestMessage(signatureIndex)); // Starlight-edit
-    private void OnDateTimeRequested(int dateTimeIndex) => SendMessage(new PaperDateTimeRequestMessage(dateTimeIndex)); // Starlight-edit
+    private void OnSignatureRequested(int signatureIndex) => SendMessage(new PaperSignatureRequestMessage(signatureIndex, _window?.ContentVersion ?? -1)); // Starlight-edit
+    private void OnDateTimeRequested(int dateTimeIndex) => SendMessage(new PaperDateTimeRequestMessage(dateTimeIndex, _window?.ContentVersion ?? -1)); // Starlight-edit
 }

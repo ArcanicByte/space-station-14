@@ -98,9 +98,9 @@ public abstract partial class SharedPaperLanguageSystem : EntitySystem
     public virtual string? TrySave(Entity<PaperComponent> paper, EntityUid actor, string text) => text.Length <= paper.Comp.ContentSize ? text : null;
 
     /// <summary>
-    /// Paper content with the Nth <paramref name="tag"/> filled in, or null if the player can't fill it.
+    /// Paper content with the Nth <paramref name="tag"/> filled in, or null if the player can't fill it or the paper changed.
     /// </summary>
-    public virtual string? FillTag(Entity<PaperComponent> paper, EntityUid actor, string tag, int index, string text) => null;
+    public virtual string? FillTag(Entity<PaperComponent> paper, EntityUid actor, string tag, int version, int index, string text) => null;
 
     /// <summary>
     /// Paper text with language tags, obfuscated where the viewer can't read it.

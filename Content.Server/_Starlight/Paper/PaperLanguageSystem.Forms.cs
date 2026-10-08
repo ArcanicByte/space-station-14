@@ -111,13 +111,13 @@ public sealed partial class PaperLanguageSystem
     /// <summary>
     /// Fills a [signature] or [datetime] in the player's writing language, like a form answer.
     /// </summary>
-    public override string? FillTag(Entity<PaperComponent> paper, EntityUid actor, string tag, int index, string text)
+    public override string? FillTag(Entity<PaperComponent> paper, EntityUid actor, string tag, int version, int index, string text)
     {
         var timer = Stopwatch.GetTimestamp();
         if (!TryStartFill(paper, actor, out var language))
             return null;
 
-        if (FindNthTag(paper.Comp.Content, tag, index) is not { } position)
+        if (FindCurrentTag(paper, actor, tag, version, index) is not { } position)
             return null;
 
         var filled = FillAt(paper, actor, position, tag.Length, language, CleanAnswer(text));

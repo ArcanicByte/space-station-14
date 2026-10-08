@@ -63,10 +63,12 @@ public sealed partial class PaperComponent : Component
     public sealed class PaperSignatureRequestMessage : BoundUserInterfaceMessage
     {
         public readonly int SignatureIndex;
+        public readonly int ContentVersion;
 
-        public PaperSignatureRequestMessage(int signatureIndex)
+        public PaperSignatureRequestMessage(int signatureIndex, int contentVersion)
         {
             SignatureIndex = signatureIndex;
+            ContentVersion = contentVersion;
         }
     }
 
@@ -74,10 +76,12 @@ public sealed partial class PaperComponent : Component
     public sealed class PaperDateTimeRequestMessage : BoundUserInterfaceMessage
     {
         public readonly int DateTimeIndex;
+        public readonly int ContentVersion;
 
-        public PaperDateTimeRequestMessage(int dateTimeIndex)
+        public PaperDateTimeRequestMessage(int dateTimeIndex, int contentVersion)
         {
             DateTimeIndex = dateTimeIndex;
+            ContentVersion = contentVersion;
         }
     }
 
