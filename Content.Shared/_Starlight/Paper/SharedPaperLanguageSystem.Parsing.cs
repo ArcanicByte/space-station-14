@@ -72,7 +72,7 @@ public abstract partial class SharedPaperLanguageSystem
     protected static void AppendSection(StringBuilder builder, ProtoId<LanguagePrototype> language, string text)
     {
         var (leading, core, trailing) = SplitWhitespace(text);
-        core = EscapeTrailingBackslash(core);
+        core = EscapeTrailingBackslash(EscapeFakeLanguageTags(core));
         builder.Append(leading);
         if (language == DefaultLanguage || core.Length == 0)
             builder.Append(core);
@@ -84,13 +84,36 @@ public abstract partial class SharedPaperLanguageSystem
     /// <summary>
     /// Doubles a lone backslash at the end, so it can't escape the tag after it. Still shows as one.
     /// </summary>
-    protected static string EscapeTrailingBackslash(string text)
+    protected static string EscapeTrailingBackslash(string text) => IsEscaped(text, text.Length) ? text + '\\' : text;
+
+    /// <summary>
+    /// Escapes lang tags in text so they show as text. Real ones were already taken out as sections.
+    /// </summary>
+    protected static string EscapeFakeLanguageTags(string text) =>
+        _fakeLanguageTagRegex.Replace(text, match => IsEscaped(text, match.Index) ? match.Value : "\\" + match.Value);
+
+    /// <summary>
+    /// Escapes a lang tag cut off at the end of the text, so whatever is added after it can't finish it.
+    /// </summary>
+    protected static string EscapeCutOffLanguageTag(string text)
+    {
+        var open = text.LastIndexOf('[');
+        if (open == -1 || text.IndexOf(']', open) != -1 || IsEscaped(text, open) || !_fakeLanguageTagRegex.IsMatch(text, open))
+            return text;
+
+        return text.Insert(open, "\\");
+    }
+
+    /// <summary>
+    /// Whether the character at a position is escaped by an odd number of backslashes before it.
+    /// </summary>
+    protected static bool IsEscaped(string text, int position)
     {
         var count = 0;
-        while (count < text.Length && text[^(count + 1)] == '\\')
+        while (position > count && text[position - count - 1] == '\\')
             count++;
 
-        return count % 2 == 1 ? text + '\\' : text;
+        return count % 2 == 1;
     }
 
     protected static (string Leading, string Core, string Trailing) SplitWhitespace(string text)

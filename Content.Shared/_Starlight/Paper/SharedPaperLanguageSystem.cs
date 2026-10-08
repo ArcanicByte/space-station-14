@@ -24,6 +24,9 @@ public abstract partial class SharedPaperLanguageSystem : EntitySystem
     // [lang="X"], [lang="X" id=N] and [/lang]. Skips escaped ones, the client shows those as text
     private static readonly Regex _languageTagRegex = new(@"(?<=(?:^|[^\\])(?:\\\\)*)(?:\[lang=""?(?<lang>[A-Za-z0-9_]+)""?(?:\s+id=(?<id>\d+))?\s*\]|\[/lang\])", RegexOptions.Compiled);
 
+    // A [ that starts a lang tag, or could once more text is added after it. Tag names are case sensitive, [LANG] is just text
+    private static readonly Regex _fakeLanguageTagRegex = new(@"\[(?=\s*/?\s*(?:lang(?![\p{L}\p{N}])|(?:l(?:an?)?)?\z))", RegexOptions.Compiled);
+
     // Languages that no longer exist can't be scrambled, shown as is.
     public bool CanRead(EntityUid reader, ProtoId<LanguagePrototype> language) => !_prototype.HasIndex(language) || _language.CanUnderstand(reader, language);
 

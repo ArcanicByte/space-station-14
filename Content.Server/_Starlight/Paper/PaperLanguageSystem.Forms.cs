@@ -131,7 +131,7 @@ public sealed partial class PaperLanguageSystem
     private string? FillAt(Entity<PaperComponent> paper, EntityUid actor, int position, int tagLength, ProtoId<LanguagePrototype> language, string answer)
     {
         var content = paper.Comp.Content;
-        var filled = content[..position] + TagAnswer(content, position, language, answer) + content[(position + tagLength)..];
+        var filled = EscapeCutOffLanguageTag(content[..position]) + TagAnswer(content, position, language, answer) + content[(position + tagLength)..];
         if (filled.Length <= paper.Comp.ContentSize)
             return filled;
 
@@ -172,7 +172,7 @@ public sealed partial class PaperLanguageSystem
         for (var position = text.IndexOf(tag, StringComparison.Ordinal); position != -1; position = text.IndexOf(tag, position + tag.Length, StringComparison.Ordinal))
         {
             // An escaped tag isn't a button
-            if ((position == 0 || text[position - 1] != '\\') && count++ == index)
+            if (!IsEscaped(text, position) && count++ == index)
                 return position;
         }
 

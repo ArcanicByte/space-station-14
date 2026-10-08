@@ -78,7 +78,7 @@ public sealed partial class PaperLanguageSystem
     private ScrambledText GetScrambled(PaperLanguageStateComponent state, ProtoId<LanguagePrototype> language, string core)
     {
         if (!state.Scrambled.TryGetValue((language, core), out var scrambled))
-            state.Scrambled[(language, core)] = scrambled = new ScrambledText(EscapeTrailingBackslash(Obfuscate(core, language)));
+            state.Scrambled[(language, core)] = scrambled = new ScrambledText(Obfuscate(core, language));
 
         return scrambled;
     }
@@ -124,9 +124,9 @@ public sealed partial class PaperLanguageSystem
     }
 
     /// <summary>
-    /// Paper text for the viewer's paper UI, with locked sections tagged with an id.
+    /// Paper text for the viewer's editor, with locked sections tagged with an id.
     /// </summary>
-    private string GetUiView(Entity<PaperComponent> paper, PaperLanguageStateComponent state, EntityUid viewer, bool editing)
+    private string GetEditorView(Entity<PaperComponent> paper, PaperLanguageStateComponent state, EntityUid viewer)
     {
         var timer = Stopwatch.GetTimestamp();
         var viewerState = GetViewer(state, viewer);
@@ -164,9 +164,7 @@ public sealed partial class PaperLanguageSystem
             }
             else
             {
-                var rendered = CanRead(viewer, language) ? EscapeTrailingBackslash(core)
-                    : editing ? GetPlaceholder(state, language, core)
-                    : GetScrambled(state, language, core).Text;
+                var rendered = CanRead(viewer, language) ? EscapeTrailingBackslash(core) : GetPlaceholder(state, language, core);
                 var id = GetHiddenSectionId(state, viewerState, existingIds, new HiddenPaperSection(language, core, rendered));
                 AppendTagged(builder, language, id, rendered);
             }
@@ -181,7 +179,7 @@ public sealed partial class PaperLanguageSystem
                 hidden.Remove(id);
         }
 
-        Logger.GetSawmill("paper.lang").Info($"GetUiView took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
+        Logger.GetSawmill("paper.lang").Info($"GetEditorView took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
         return builder.ToString();
     }
 

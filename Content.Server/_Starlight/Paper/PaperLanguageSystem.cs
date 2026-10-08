@@ -93,7 +93,8 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
         int? hiddenLength = null;
         if (text == null)
         {
-            shown = GetUiView(paper, state, actor, mode == PaperAction.Write);
+            // Locked sections need ids only in the editor, nothing can be saved while reading
+            shown = mode == PaperAction.Write ? GetEditorView(paper, state, actor) : GetStyledView(paper, actor);
             hiddenLength = paper.Comp.Content.Length - shown.Length;
             viewer.SentView = view;
             viewer.SentExtra = Math.Max(0, shown.Length - paper.Comp.Content.Length);
