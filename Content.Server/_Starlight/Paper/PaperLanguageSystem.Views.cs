@@ -78,7 +78,7 @@ public sealed partial class PaperLanguageSystem
     private ScrambledText GetScrambled(PaperLanguageStateComponent state, ProtoId<LanguagePrototype> language, string core)
     {
         if (!state.Scrambled.TryGetValue((language, core), out var scrambled))
-            state.Scrambled[(language, core)] = scrambled = new ScrambledText(Obfuscate(core, language));
+            state.Scrambled[(language, core)] = scrambled = new ScrambledText(EscapeTrailingBackslash(Obfuscate(core, language)));
 
         return scrambled;
     }
@@ -164,7 +164,7 @@ public sealed partial class PaperLanguageSystem
             }
             else
             {
-                var rendered = CanRead(viewer, language) ? core
+                var rendered = CanRead(viewer, language) ? EscapeTrailingBackslash(core)
                     : editing ? GetPlaceholder(state, language, core)
                     : GetScrambled(state, language, core).Text;
                 var id = GetHiddenSectionId(state, viewerState, existingIds, new HiddenPaperSection(language, core, rendered));

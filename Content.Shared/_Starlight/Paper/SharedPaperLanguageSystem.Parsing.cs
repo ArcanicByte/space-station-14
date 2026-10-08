@@ -72,12 +72,25 @@ public abstract partial class SharedPaperLanguageSystem
     protected static void AppendSection(StringBuilder builder, ProtoId<LanguagePrototype> language, string text)
     {
         var (leading, core, trailing) = SplitWhitespace(text);
+        core = EscapeTrailingBackslash(core);
         builder.Append(leading);
         if (language == DefaultLanguage || core.Length == 0)
             builder.Append(core);
         else
             AppendTagged(builder, language, null, core);
         builder.Append(trailing);
+    }
+
+    /// <summary>
+    /// Doubles a lone backslash at the end, so it can't escape the tag after it. Still shows as one.
+    /// </summary>
+    protected static string EscapeTrailingBackslash(string text)
+    {
+        var count = 0;
+        while (count < text.Length && text[^(count + 1)] == '\\')
+            count++;
+
+        return count % 2 == 1 ? text + '\\' : text;
     }
 
     protected static (string Leading, string Core, string Trailing) SplitWhitespace(string text)

@@ -13,6 +13,10 @@ public sealed partial class PaperLanguageSystem
     [GeneratedRegex(@"\[form\]|\[check\]|\[signature\]|\[datetime\]")]
     private static partial Regex InteractiveTagRegex();
 
+    // Start of a fake lang tag, or of one that would form when the next section is joined on
+    [GeneratedRegex(@"\[(?=\s*/?\s*(?:lang(?![\p{L}\p{N}])|(?:l(?:an?)?)?\z))")]
+    private static partial Regex FakeLanguageTagRegex();
+
     private PaperMergeResult MergeEdit(
         Entity<PaperComponent> paper,
         PaperLanguageStateComponent state,
@@ -48,7 +52,7 @@ public sealed partial class PaperLanguageSystem
                 continue;
             }
 
-            var text = section.Text;
+            var text = EscapeTrailingBackslash(EscapeFakeLanguageTags(section.Text));
 
             if (string.IsNullOrWhiteSpace(text))
             {
@@ -110,6 +114,19 @@ public sealed partial class PaperLanguageSystem
         var translated = language != original.Language && CanRead(editor, original.Language) && CanWrite(editor, language);
         return (translated ? language : original.Language, original.Original);
     }
+
+    /// <summary>
+    /// Escapes lang tags the player typed so they show as text. Real ones were already taken out as sections.
+    /// </summary>
+    private static string EscapeFakeLanguageTags(string text) => FakeLanguageTagRegex().Replace(text, match =>
+    {
+        // An odd number of backslashes before it already escapes it
+        var count = 0;
+        while (match.Index > count && text[match.Index - count - 1] == '\\')
+            count++;
+
+        return count % 2 == 1 ? match.Value : "\\" + match.Value;
+    });
 
     /// <summary>
     /// Uses up one copy of a section on the paper, false if none are left.
