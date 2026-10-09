@@ -248,7 +248,18 @@ public sealed partial class PaperWindow
 
         var (section, locked) = GetSectionAt(text, start);
         if (locked || (section ?? DefaultLanguage) == language)
+        {
+            // A backslash right before a section tag would turn the tag into text. Doubled it still shows as one
+            if (IsEscaped(text, end) && StartsLanguageTag(text, end))
+                SetInputText(text.Insert(end, "\\"), end + 1);
+
             return;
+        }
+
+        // The new text gets a closing tag right after it, which a trailing backslash would escape
+        var escaped = EscapeTrailingBackslash(inserted);
+        var added = escaped.Length - inserted.Length;
+        inserted = escaped;
 
         // Inside a section Common needs its own tag, closing only goes back to the outer section
         var isDefault = language == DefaultLanguage && section == null;
@@ -268,16 +279,21 @@ public sealed partial class PaperWindow
             && !previousSection.Locked)
         {
             newText = text[..(start - close.Length)] + inserted + close + text[end..];
-            newCursor = end - close.Length;
+            newCursor = end + added - close.Length;
         }
         else
         {
             // Close the section we're in around the new text, then reopen it
             var before = section != null ? ClosingTag + open : open;
+
+            // Same for a backslash already in the section, right where it gets closed
+            if (section != null && IsEscaped(text, start))
+                before = "\\" + before;
+
             var after = section is { } reopen ? close + OpeningTag(reopen) : close;
 
             newText = text[..start] + before + inserted + after + text[end..];
-            newCursor = end + before.Length;
+            newCursor = end + added + before.Length;
         }
 
         SetInputText(newText, newCursor);

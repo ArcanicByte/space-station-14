@@ -84,7 +84,14 @@ public abstract partial class SharedPaperLanguageSystem
     /// <summary>
     /// Doubles a lone backslash at the end, so it can't escape the tag after it. Still shows as one.
     /// </summary>
-    protected static string EscapeTrailingBackslash(string text) => IsEscaped(text, text.Length) ? text + '\\' : text;
+    public static string EscapeTrailingBackslash(string text) => IsEscaped(text, text.Length) ? text + '\\' : text;
+
+    /// <summary>
+    /// Whether a lang tag starts at a position.
+    /// </summary>
+    public static bool StartsLanguageTag(string text, int position) =>
+        text.AsSpan(position).StartsWith(ClosingTag, StringComparison.Ordinal)
+        || text.AsSpan(position).StartsWith("[lang=", StringComparison.Ordinal);
 
     /// <summary>
     /// Escapes lang tags in text so they show as text. Real ones were already taken out as sections.
@@ -107,7 +114,7 @@ public abstract partial class SharedPaperLanguageSystem
     /// <summary>
     /// Whether the character at a position is escaped by an odd number of backslashes before it.
     /// </summary>
-    protected static bool IsEscaped(string text, int position)
+    public static bool IsEscaped(string text, int position)
     {
         var count = 0;
         while (position > count && text[position - count - 1] == '\\')
