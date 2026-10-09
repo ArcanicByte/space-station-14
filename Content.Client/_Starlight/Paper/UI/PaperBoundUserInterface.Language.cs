@@ -3,12 +3,15 @@ using System.Diagnostics;
 using Content.Shared._Starlight.Paper;
 using Content.Shared.Paper;
 using Content.Shared.Popups;
+using Robust.Client.Replays.Playback;
 using static Content.Shared.Paper.PaperComponent;
 
 namespace Content.Client.Paper.UI;
 
 public sealed partial class PaperBoundUserInterface
 {
+    [Dependency] private IReplayPlaybackManager _replayPlayback = default!;
+
     /// <summary>
     /// Whether the server's text has arrived. Stamps wait for it.
     /// </summary>
@@ -17,7 +20,7 @@ public sealed partial class PaperBoundUserInterface
     private void OpenLanguage()
     {
         var timer = Stopwatch.GetTimestamp();
-        if (_window == null)
+        if (_window == null || ShowReplayText())
             return;
 
         _window.InitializeLanguageBar();
@@ -52,8 +55,26 @@ public sealed partial class PaperBoundUserInterface
     {
         base.Update();
 
+        if (ShowReplayText())
+            return;
+
         if (_hasText && _window != null && EntMan.TryGetComponent<PaperComponent>(Owner, out var paper))
             _window.RefreshStamps(paper.StampedBy);
+    }
+
+    /// <summary>
+    /// Replays have no server to send views, so they show the recorded full text. False outside replays.
+    /// </summary>
+    private bool ShowReplayText()
+    {
+        if (_replayPlayback.Replay == null
+            || _window == null
+            || !EntMan.TryGetComponent<PaperComponent>(Owner, out var paper))
+            return false;
+
+        var content = EntMan.TryGetComponent<PaperReplayContentComponent>(Owner, out var replay) ? replay.Content : string.Empty;
+        _window.Populate(new PaperBoundUserInterfaceState(content, paper.StampedBy, PaperAction.Read));
+        return true;
     }
 
     protected override void ReceiveMessage(BoundUserInterfaceMessage message)

@@ -14,4 +14,12 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
         if (_ui.TryGetOpenUi(paper.Owner, PaperUiKey.Key, out var bui))
             bui.Update();
     }
+
+    // Replays only, text written while the paper is open
+    [SubscribeLocalEvent]
+    private void OnReplayContentState(Entity<PaperReplayContentComponent> ent, ref AfterAutoHandleStateEvent args)
+    {
+        if (TryComp<PaperComponent>(ent, out var paper))
+            UpdateViews((ent, paper));
+    }
 }

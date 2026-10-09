@@ -4,6 +4,7 @@ using Content.Shared._Starlight.Language.Events;
 using Content.Shared._Starlight.Paper;
 using Content.Shared.Paper;
 using Content.Shared.Popups;
+using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using static Content.Shared.Paper.PaperComponent;
@@ -57,10 +58,19 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
         return viewer;
     }
 
+    // Replays are recorded without a player, they're the only ones who get the full text
+    [SubscribeLocalEvent]
+    private void OnReplayContentGetStateAttempt(Entity<PaperReplayContentComponent> ent, ref ComponentGetStateAttemptEvent args)
+    {
+        if (args.Player != null)
+            args.Cancelled = true;
+    }
+
     public override void UpdateViews(Entity<PaperComponent> paper)
     {
         var timer = Stopwatch.GetTimestamp();
         UpdateHasWriting(paper);
+        UpdateReplayContent(paper);
 
         foreach (var actor in _ui.GetActors(paper.Owner, PaperUiKey.Key))
             SendView(paper, actor);
@@ -247,5 +257,24 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
 
         paper.Comp.HasWriting = hasWriting;
         Dirty(paper);
+    }
+
+    private void UpdateReplayContent(Entity<PaperComponent> paper)
+    {
+        var content = paper.Comp.Content;
+        if (!TryComp<PaperReplayContentComponent>(paper, out var replay))
+        {
+            // Blank papers don't need one
+            if (content.Length == 0)
+                return;
+
+            replay = AddComp<PaperReplayContentComponent>(paper);
+        }
+
+        if (replay.Content == content)
+            return;
+
+        replay.Content = content;
+        Dirty(paper, replay);
     }
 }
