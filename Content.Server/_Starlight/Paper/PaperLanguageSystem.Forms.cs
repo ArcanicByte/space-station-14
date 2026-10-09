@@ -88,7 +88,7 @@ public sealed partial class PaperLanguageSystem
             return true;
 
         if (attempt.FailReason is { } reason)
-            _popup.PopupEntity(reason, actor, actor);
+            _popup.PopupEntity(Loc.GetString(reason), actor, actor);
 
         return false;
     }
