@@ -1,6 +1,7 @@
 using Content.Shared._Starlight.Language;
 using Content.Shared._Starlight.Language.Systems;
 using Robust.Client.Player;
+using Robust.Client.Replays.Playback;
 using Robust.Client.UserInterface.RichText;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
@@ -16,6 +17,7 @@ public sealed partial class LangTagHandler : IMarkupTagHandler
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private IPlayerManager _player = default!;
     [Dependency] private MarkupTagManager _tags = default!;
+    [Dependency] private IReplayPlaybackManager _replayPlayback = default!;
 
     public string Name => "lang";
 
@@ -56,8 +58,10 @@ public sealed partial class LangTagHandler : IMarkupTagHandler
             || !_prototype.TryIndex<LanguagePrototype>(languageId, out var language))
             return;
 
-        var obfuscated = _player.LocalEntity is not { } player
-            || !_entityManager.System<SharedLanguageSystem>().CanUnderstand(player, language.ID);
+        // Replays show the real text, even when spectating someone who can't read it
+        var obfuscated = _replayPlayback.Replay == null
+            && (_player.LocalEntity is not { } player
+                || !_entityManager.System<SharedLanguageSystem>().CanUnderstand(player, language.ID));
 
         // Obfuscation fonts are only for readers who don't understand it
         if (language.Speech.FontId is { } id
