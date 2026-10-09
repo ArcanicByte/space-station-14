@@ -63,12 +63,12 @@ public sealed partial class PaperComponent : Component
     public sealed class PaperSignatureRequestMessage : BoundUserInterfaceMessage
     {
         public readonly int SignatureIndex;
-        public readonly int ContentVersion;
+        public readonly int ContentVersion; // Starlight-edit
 
-        public PaperSignatureRequestMessage(int signatureIndex, int contentVersion)
+        public PaperSignatureRequestMessage(int signatureIndex, int contentVersion) // Starlight-edit
         {
             SignatureIndex = signatureIndex;
-            ContentVersion = contentVersion;
+            ContentVersion = contentVersion; // Starlight-edit
         }
     }
 
@@ -76,12 +76,12 @@ public sealed partial class PaperComponent : Component
     public sealed class PaperDateTimeRequestMessage : BoundUserInterfaceMessage
     {
         public readonly int DateTimeIndex;
-        public readonly int ContentVersion;
+        public readonly int ContentVersion; // Starlight-edit
 
-        public PaperDateTimeRequestMessage(int dateTimeIndex, int contentVersion)
+        public PaperDateTimeRequestMessage(int dateTimeIndex, int contentVersion) // Starlight-edit
         {
             DateTimeIndex = dateTimeIndex;
-            ContentVersion = contentVersion;
+            ContentVersion = contentVersion; // Starlight-edit
         }
     }
 
