@@ -86,9 +86,6 @@ public abstract partial class SharedPaperLanguageSystem
     /// </summary>
     public static string EscapeTrailingBackslash(string text) => IsEscaped(text, text.Length) ? text + '\\' : text;
 
-    /// <summary>
-    /// Whether a lang tag starts at a position.
-    /// </summary>
     public static bool StartsLanguageTag(string text, int position) =>
         text.AsSpan(position).StartsWith(ClosingTag, StringComparison.Ordinal)
         || text.AsSpan(position).StartsWith("[lang=", StringComparison.Ordinal);
@@ -146,9 +143,6 @@ public abstract partial class SharedPaperLanguageSystem
         builder.Append(ClosingTag);
     }
 
-    /// <summary>
-    /// Gets the language section at a position, and whether it's locked.
-    /// </summary>
     public static (ProtoId<LanguagePrototype>? Language, bool Locked) GetSectionAt(string text, int position)
     {
         var open = new Stack<(ProtoId<LanguagePrototype>? Language, int? Id)>();

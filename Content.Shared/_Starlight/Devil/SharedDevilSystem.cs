@@ -206,9 +206,6 @@ public abstract partial class SharedDevilSystem : EntitySystem
         Dirty(uid, contractComp);
     }
 
-    /// <summary>
-    /// Stops signing and tells the signer why.
-    /// </summary>
     private void FailSigning(ref PaperSignedEvent args, string reason)
     {
         args.FailReason = reason;

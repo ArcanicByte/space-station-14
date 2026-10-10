@@ -91,9 +91,6 @@ public readonly record struct PaperSentView(
         && Languages.SequenceEqual(other.Languages);
 }
 
-/// <summary>
-/// A section scrambled for readers who don't know its language.
-/// </summary>
 public sealed class ScrambledText(string text)
 {
     [ViewVariables]

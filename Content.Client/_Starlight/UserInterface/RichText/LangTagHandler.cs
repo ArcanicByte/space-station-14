@@ -46,9 +46,6 @@ public sealed partial class LangTagHandler : IMarkupTagHandler
         context.Color.Pop();
     }
 
-    /// <summary>
-    /// The language's font and color, same as chat.
-    /// </summary>
     private void GetStyle(MarkupNode node, out string? fontId, out Color? color)
     {
         fontId = null;

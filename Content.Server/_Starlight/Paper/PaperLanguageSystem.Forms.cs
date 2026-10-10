@@ -20,9 +20,6 @@ public sealed partial class PaperLanguageSystem
     // Stripped from answers, they could add markup or break the surrounding tags
     private static readonly char[] _answerBannedChars = ['[', ']', '\\', '\n', '\r'];
 
-    /// <summary>
-    /// Marks a [check] tag can be filled in with.
-    /// </summary>
     private const string CheckMarks = "☐✔✖";
 
     [SubscribeLocalEvent]
@@ -171,7 +168,6 @@ public sealed partial class PaperLanguageSystem
         var count = 0;
         for (var position = text.IndexOf(tag, StringComparison.Ordinal); position != -1; position = text.IndexOf(tag, position + tag.Length, StringComparison.Ordinal))
         {
-            // An escaped tag isn't a button
             if (!IsEscaped(text, position) && count++ == index)
                 return position;
         }

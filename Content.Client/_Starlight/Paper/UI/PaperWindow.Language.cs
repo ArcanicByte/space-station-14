@@ -28,9 +28,6 @@ public sealed partial class PaperWindow
     /// </summary>
     public event Action<int, int, char>? OnCheckFilled;
 
-    /// <summary>
-    /// Version of the paper text being shown. Sent with form fills.
-    /// </summary>
     public int ContentVersion { get; set; }
 
     public TimeSpan SaveDelay { get; set; }
@@ -96,9 +93,6 @@ public sealed partial class PaperWindow
 
     private void StartSaveCooldown() => s_saveCooldownEnd = _timing.RealTime + SaveDelay;
 
-    /// <summary>
-    /// Closes the form dialog. True if one was open.
-    /// </summary>
     public bool CloseFormDialog()
     {
         if (_activeFormPopup is not { Visible: true } popup)
@@ -172,9 +166,6 @@ public sealed partial class PaperWindow
         BlankPaperIndicator.Visible = false;
     }
 
-    /// <summary>
-    /// Redraws stamps, text is left alone. Does nothing in the editor.
-    /// </summary>
     public void RefreshStamps(List<StampDisplayInfo> stamps)
     {
         var timer = Stopwatch.GetTimestamp();
@@ -317,9 +308,6 @@ public sealed partial class PaperWindow
         Logger.GetSawmill("paper.lang").Info($"SetInputText took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
     }
 
-    /// <summary>
-    /// Updates the locked warning above the paper and the save warning next to the save button.
-    /// </summary>
     private void UpdateWarnings()
     {
         var timer = Stopwatch.GetTimestamp();

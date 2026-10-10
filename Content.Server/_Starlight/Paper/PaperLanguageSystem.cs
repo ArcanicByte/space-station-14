@@ -203,9 +203,6 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
         SendView(paper, actor, text);
     }
 
-    /// <summary>
-    /// Starts the save cooldown. False with a popup if it's still running.
-    /// </summary>
     private bool TryStartCooldown(Entity<PaperComponent> paper, EntityUid actor)
     {
         if (TryComp<PaperSaveCooldownComponent>(actor, out var cooldown) && _timing.CurTime < cooldown.NextSave)

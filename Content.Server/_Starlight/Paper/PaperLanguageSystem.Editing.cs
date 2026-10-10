@@ -138,9 +138,6 @@ public sealed partial class PaperLanguageSystem
         return true;
     }
 
-    /// <summary>
-    /// Builds paper content from sections.
-    /// </summary>
     private static string Serialize(IEnumerable<(ProtoId<LanguagePrototype> Language, string Text)> sections)
     {
         var timer = Stopwatch.GetTimestamp();
@@ -201,9 +198,6 @@ public sealed partial class PaperLanguageSystem
     }
 }
 
-/// <summary>
-/// Result of saving paper text, including what was lost.
-/// </summary>
 public readonly record struct PaperMergeResult(
     string Content,
     List<ProtoId<LanguagePrototype>> ConvertedFrom,
