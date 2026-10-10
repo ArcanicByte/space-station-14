@@ -262,7 +262,6 @@ public sealed partial class PaperSystem : EntitySystem
         // Starlight-end
 
         entity.Comp.Mode = PaperAction.Read;
-        entity.Comp.Writers.Remove(args.Actor); // Starlight-edit
         UpdateUserInterface(entity);
     }
 

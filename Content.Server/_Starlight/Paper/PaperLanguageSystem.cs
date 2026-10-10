@@ -190,6 +190,9 @@ public sealed partial class PaperLanguageSystem : SharedPaperLanguageSystem
         viewer?.HiddenSections.Clear();
         ShowSavePopup(actor, result, writing, viewer?.EditVersion != state.ContentVersion);
 
+        // Done writing, so the view sent after SetContent is the read one
+        paper.Comp.Writers.Remove(actor);
+
         Logger.GetSawmill("paper.lang").Info($"TrySave took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
         return result.Content;
     }
