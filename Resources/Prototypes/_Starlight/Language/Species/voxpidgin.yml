@@ -1,5 +1,6 @@
 - type: language
   id: VoxPidgin
+  writable: true
   icon: LanguageIconVox
   chatPrefix: vox
   speech:

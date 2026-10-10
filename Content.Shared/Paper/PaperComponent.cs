@@ -8,7 +8,7 @@ namespace Content.Shared.Paper;
 public sealed partial class PaperComponent : Component
 {
     public PaperAction Mode;
-    [DataField("content"), AutoNetworkedField]
+    [DataField("content")] // Starlight-edit
     public string Content { get; set; } = "";
 
     [DataField("contentSize")]
@@ -63,10 +63,12 @@ public sealed partial class PaperComponent : Component
     public sealed class PaperSignatureRequestMessage : BoundUserInterfaceMessage
     {
         public readonly int SignatureIndex;
+        public readonly int ContentVersion; // Starlight-edit
 
-        public PaperSignatureRequestMessage(int signatureIndex)
+        public PaperSignatureRequestMessage(int signatureIndex, int contentVersion) // Starlight-edit
         {
             SignatureIndex = signatureIndex;
+            ContentVersion = contentVersion; // Starlight-edit
         }
     }
 
@@ -74,10 +76,12 @@ public sealed partial class PaperComponent : Component
     public sealed class PaperDateTimeRequestMessage : BoundUserInterfaceMessage
     {
         public readonly int DateTimeIndex;
+        public readonly int ContentVersion; // Starlight-edit
 
-        public PaperDateTimeRequestMessage(int dateTimeIndex)
+        public PaperDateTimeRequestMessage(int dateTimeIndex, int contentVersion) // Starlight-edit
         {
             DateTimeIndex = dateTimeIndex;
+            ContentVersion = contentVersion; // Starlight-edit
         }
     }
 

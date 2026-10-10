@@ -8,7 +8,7 @@ using static Content.Shared.Paper.PaperComponent;
 namespace Content.Client.Paper.UI;
 
 [UsedImplicitly]
-public sealed class PaperBoundUserInterface : BoundUserInterface
+public sealed partial class PaperBoundUserInterface : BoundUserInterface // Starlight-edit
 {
     [ViewVariables]
     private PaperWindow? _window;
@@ -34,6 +34,8 @@ public sealed class PaperBoundUserInterface : BoundUserInterface
         {
             _window.InitVisuals(Owner, visuals);
         }
+
+        OpenLanguage(); // Starlight-edit
     }
 
     protected override void UpdateState(BoundUserInterfaceState state)
@@ -53,6 +55,6 @@ public sealed class PaperBoundUserInterface : BoundUserInterface
         }
     }
 
-    private void OnSignatureRequested(int signatureIndex) => SendMessage(new PaperSignatureRequestMessage(signatureIndex)); // Starlight-edit
-    private void OnDateTimeRequested(int dateTimeIndex) => SendMessage(new PaperDateTimeRequestMessage(dateTimeIndex)); // Starlight-edit
+    private void OnSignatureRequested(int signatureIndex) => SendMessage(new PaperSignatureRequestMessage(signatureIndex, _window?.ContentVersion ?? -1)); // Starlight-edit
+    private void OnDateTimeRequested(int dateTimeIndex) => SendMessage(new PaperDateTimeRequestMessage(dateTimeIndex, _window?.ContentVersion ?? -1)); // Starlight-edit
 }

@@ -1,5 +1,6 @@
 - type: language
   id: Chittin
+  writable: true
   icon: LanguageIconChittin
   chatPrefix: chi
   speech:

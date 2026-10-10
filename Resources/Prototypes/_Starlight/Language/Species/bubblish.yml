@@ -1,5 +1,6 @@
 - type: language
   id: Bubblish
+  writable: true
   icon: LanguageIconSlime
   chatPrefix: bub
   speech:

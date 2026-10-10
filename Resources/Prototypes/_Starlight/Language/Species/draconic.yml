@@ -1,5 +1,6 @@
 - type: language
   id: Draconic
+  writable: true
   icon: LanguageIconLizard
   chatPrefix: drc
   speech:
