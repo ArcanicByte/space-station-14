@@ -484,7 +484,9 @@ public sealed partial class PaperSystem : EntitySystem
         var shiftTime = _timeSystem.GetShiftDuration();
 
         // shift time is more helpful than the date for rounds, date is still included for the flavor
-        var formatted = $"{date} // {(int)shiftTime.TotalHours:D2}:{shiftTime.Minutes:D2} Shift Time";
+        var formatted = Loc.GetString("paper-datetime-format",
+            ("date", date),
+            ("time", $"{(int)shiftTime.TotalHours:D2}:{shiftTime.Minutes:D2}"));
 
         if (_paperLanguage.FillTag(entity, args.Actor, SharedPaperLanguageSystem.DateTimeTag, args.ContentVersion, args.DateTimeIndex, formatted) is not { } newText)
             return;
