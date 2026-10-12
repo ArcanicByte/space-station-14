@@ -98,7 +98,7 @@ public abstract partial class SharedPaperLanguageSystem : EntitySystem
     /// <summary>
     /// Turns text from the paper UI into paper content, or null if the save is rejected.
     /// </summary>
-    public virtual string? TrySave(Entity<PaperComponent> paper, EntityUid actor, string text) => text.Length <= paper.Comp.ContentSize ? text : null;
+    public virtual string? TrySave(Entity<PaperComponent> paper, EntityUid actor, string text) => null;
 
     /// <summary>
     /// Paper content with the Nth <paramref name="tag"/> filled in, or null if the player can't fill it or the paper changed.

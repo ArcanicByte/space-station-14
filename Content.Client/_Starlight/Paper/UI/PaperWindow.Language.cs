@@ -186,7 +186,6 @@ public sealed partial class PaperWindow
     {
         _editPending = false;
         _trackedText = Rope.Collapse(Input.TextRope);
-        UpdateWarnings();
     }
 
     protected override void FrameUpdate(FrameEventArgs args)
@@ -305,6 +304,7 @@ public sealed partial class PaperWindow
 
         UpdateFillState();
         ResyncLanguageTracking();
+        UpdateWarnings();
         Logger.GetSawmill("paper.lang").Info($"SetInputText took {Stopwatch.GetElapsedTime(timer).TotalMilliseconds:0.000} ms");
     }
 
